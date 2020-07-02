@@ -207,7 +207,7 @@ class SetFile(BaseFile, set):
     """ Read File into set."""
     def __init__(self, filename, valuepos=0, delimiter=False,
                        keycast=None, cast=None, has_header=False):
-        super(BaseFile, self).__init__(filename)
+        super(BaseFile, self).__init__()
 
         ## Load attribute.
         self._fp = must_open(filename)
