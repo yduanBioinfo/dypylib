@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 name = "dypylib"
 setuptools.setup(
     name=name, # Replace with your own username
-    version="0.0.1",
+    version="0.0.2",
     author="You Duan",
     author_email="duanyou@outlook.com",
     description="genomics research",

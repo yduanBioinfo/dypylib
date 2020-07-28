@@ -110,6 +110,8 @@ class Fadict(dict):
 
     def getSeq(self,scaf,st,ed):
         scaf = self.getChr(scaf)
+        if st < 1 or ed < 1:
+            raise ValueError("sequence is 1-based \n")
         if st > ed:
             st, ed = ed, st
             return scaf[st-1: ed].getRC()
