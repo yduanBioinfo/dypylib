@@ -2,9 +2,12 @@
 
 import sys, re, string, itertools, copy
 from collections import OrderedDict as Ordic
-from pygtftk.gtf_interface import GTF as tkGTF
-from pygtftk.Line import Feature as tkFeature
-import pysnooper
+try:
+    from pygtftk.gtf_interface import GTF as tkGTF
+    from pygtftk.Line import Feature as tkFeature
+    import pysnooper
+except:
+    pass
 
 '''
 License: GNU General Public License v3.0 (http://www.gnu.org/licenses/gpl-3.0.html)
