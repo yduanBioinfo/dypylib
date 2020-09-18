@@ -133,12 +133,17 @@ class DictFile(BaseFile, dict):
         self.__valuepos = self.__value2list(valuepos)#for muti-value purpose
         #ncols correct it self while reading lines.[Hidden bugs]
         # An error is going to triggered when valuepos is None.
-        self.ncols = max(keypos, self.max(self.__valuepos)) + 1
+        self.ncols = max(keypos, self._int(self.max(self.__valuepos))) + 1
         #if has_header:
         #    self._read_header(delimiter)
         self._read_header(delimiter)
         self._read_body(keypos,delimiter,keycast,cast)
 
+    def _int(self, s):
+        if s == None:
+            return 0
+        else:
+            return _int(s)
     def _read_header(self,delimiter):
         if self.has_header == False:
             return
@@ -192,6 +197,7 @@ class DictFile(BaseFile, dict):
         ### Why return None
         if value == None:
             return value
+            #return [0]
         return [value]
 
     #get length of value list[Abord]
