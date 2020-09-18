@@ -28,6 +28,11 @@ class LineFile(BaseFile, list):
             logging.debug("Load {0} lines from `{1}`.".\
                         format(len(self), filename))
 
+class ListFile(LineFile):
+
+    def __init__(self, *args, **kwargs):
+        super(ListFile, self).__init__(*args, **kwargs, load=True)
+
 class LineFileIterator(LineFile):
     """
     Iterator for line file.
