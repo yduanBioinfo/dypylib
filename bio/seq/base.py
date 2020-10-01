@@ -447,11 +447,18 @@ class EXON(GENT):
         return self.as_str()
 
 class INTRON(GENT):
-    def __init__(self,start,end,strand,Chr,gene_id,tx_id):
+    def __init__(self,start,end,strand,Chr,gene_id = None,tx_id = None):
         self.Chr = Chr
         self.gene_id = gene_id
         self.tx_id = tx_id
         super(INTRON,self).__init__(start,end,strand)
+
+    def __eq__(self, other):
+        try:
+            return (self.Chr == other.Chr) and (self.strand == other.strand) and \
+                   (self.start == other.start) and (self.end == other.end)
+        except:
+            return False
 
 class SGENT(dict,GENT):
     """
