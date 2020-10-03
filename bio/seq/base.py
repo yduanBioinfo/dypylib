@@ -121,6 +121,13 @@ class Fadict(dict):
         else:
             return scaf[st-1:ed]
 
+    def _getSeq_with_strand(self, scaf, st, ed, strand):
+        # assume start is always less than end when strand info
+        # is provided.
+        if strand == '-':
+            st, ed = ed, st
+        return self._getSeq(scaf, st, ed)
+
     def _getSeq_for_obj(self, rec):
         start = rec.start
         end = rec.end
@@ -131,12 +138,9 @@ class Fadict(dict):
         # Revers start and end when meet minus strand.
         # object can have not strand attribute.
         try:
-            if rec.strand == '-':
-                start, end = end, start
+            return self._getSeq_with_strand(chrom, start, end, self.strand)
         except:
-            pass
-
-        return self._getSeq(chrom, start, end)
+            return self._getSeq(chrom, start, end)
 
     def getSeq(self, *args):
         """Get sequence for provided location info.
@@ -146,6 +150,8 @@ class Fadict(dict):
         """
         if len(args) == 3:
             return self._getSeq(*args)
+        elif len(args) == 4:
+            return self._getSeq_with_strand(*args)
         else:
             return self._getSeq_for_obj(args[0])
 
@@ -478,6 +484,7 @@ class INTRON(GENT):
 
     def __init__(self,start,end,strand,Chr,gene_id = None,tx_id = None):
         self.Chr = Chr
+        self.chrom = Chr
         self.gene_id = gene_id
         self.tx_id = tx_id
         super(INTRON,self).__init__(start,end,strand)
