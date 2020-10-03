@@ -121,6 +121,23 @@ class Fadict(dict):
         else:
             return scaf[st-1:ed]
 
+    def _getSeq_for_obj(self, rec):
+        start = rec.start
+        end = rec.end
+        try:
+            chrom = rec.Chr
+        except:
+            chrom = rec.chrom
+        # Revers start and end when meet minus strand.
+        # object can have not strand attribute.
+        try:
+            if rec.strand == '-':
+                start, end = end, start
+        except:
+            pass
+
+        return self._getSeq(chrom, start, end)
+
     def getSeq(self, *args):
         """Get sequence for provided location info.
         When the length of args is 3, scaf, start and end is in need.
@@ -130,18 +147,7 @@ class Fadict(dict):
         if len(args) == 3:
             return self._getSeq(*args)
         else:
-            rec = args[0]
-            start = rec.start
-            end = rec.end
-            try:
-                chrom = rec.Chr
-            except:
-                chrom = rec.chrom
-            # Revers start and end when meet minus strand.
-            if rec.strand == '-':
-                start, end = end, start
-
-            return self._getSeq(chrom, start, end)
+            return self._getSeq_for_obj(args[0])
 
     def getNames(self):
         return self.keys()
