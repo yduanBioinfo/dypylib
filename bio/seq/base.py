@@ -111,7 +111,7 @@ class Fadict(dict):
     def getChr(self,key):
         return self.get(key)
 
-    def getSeq(self,scaf,st,ed):
+    def _getSeq(self,scaf,st,ed):
         scaf = self.getChr(scaf)
         if st < 1 or ed < 1:
             raise ValueError("sequence is 1-based \n")
@@ -120,6 +120,28 @@ class Fadict(dict):
             return scaf[st-1: ed].getRC()
         else:
             return scaf[st-1:ed]
+
+    def getSeq(self, *args):
+        """Get sequence for provided location info.
+        When the length of args is 3, scaf, start and end is in need.
+        When only one arg(s) is provided, it should be an object with
+          Chr/chrom, start, and end attribute.
+        """
+        if len(args) == 3:
+            return self._getSeq(*args)
+        else:
+            rec = args[0]
+            start = rec.start
+            end = rec.end
+            try:
+                chrom = rec.Chr
+            except:
+                chrom = rec.chrom
+            # Revers start and end when meet minus strand.
+            if rec.strand == '-':
+                start, end = end, start
+
+            return self._getSeq(chrom, start, end)
 
     def getNames(self):
         return self.keys()
