@@ -143,7 +143,8 @@ class DictFile(BaseFile, dict):
         if s == None:
             return 0
         else:
-            return _int(s)
+            return int(s)
+
     def _read_header(self,delimiter):
         if self.has_header == False:
             return
