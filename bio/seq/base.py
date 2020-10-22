@@ -275,7 +275,7 @@ class Gff(object):
 
         for line in self.infile:
             line=line.strip()
-            if line[0]=="#":
+            if len(line)==0 or line[0]=="#":
                 continue
             #yield Gff_rec(line.split(self.sep))
             yield Gff_rec(line.split(self.sep),self.fm)
