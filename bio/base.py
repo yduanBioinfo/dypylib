@@ -248,6 +248,10 @@ def must_open(filename, mode="r", checkexists=False, skipcheck=False, \
 
     Checks on multiple files, stdin/stdout/stderr, .gz or .bz2 file.
     """
+    import io
+    if isinstance(filename, io.IOBase):
+        return filename
+
     if isinstance(filename, list):
         assert "r" in mode
 
@@ -257,9 +261,9 @@ def must_open(filename, mode="r", checkexists=False, skipcheck=False, \
             import fileinput
             return fileinput.input(filename)
 
-    if filename.startswith("s3://"):
-        from jcvi.utils.aws import pull_from_s3
-        filename = pull_from_s3(filename)
+    #if filename.startswith("s3://"):
+    #    from jcvi.utils.aws import pull_from_s3
+    #    filename = pull_from_s3(filename)
 
     if filename in ("-", "stdin"):
         assert "r" in mode
