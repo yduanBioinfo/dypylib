@@ -179,7 +179,6 @@ class DictFile(BaseFile, dict):
                     format(len(self), self.filename))
 
     def _short_line_handle(self,row,lineno,ncols):
-                
         action = "Aborted" if self.strict else "Skipped"
 
         msg = "Must contain >= {0} columns.  {1}.\n".format(ncols, action)
@@ -190,10 +189,11 @@ class DictFile(BaseFile, dict):
 
     #Convert single item to list.
     def __value2list(self, value):
-
         #if not self.parse_value:
         #    return value
-        if isinstance(value,list):
+        if isinstance(value, map):
+            value = list(value)
+        if isinstance(value, list):
             return value
         ### Why return None
         if value == None:
@@ -203,14 +203,12 @@ class DictFile(BaseFile, dict):
 
     #get length of value list[Abord]
     def valueLength(self):
-
         if self.__valuepos == None:
             return self.ncols
         else:
             return len(self.__valuepos)
 
     def max(self, values):
-
         if values == None:
             return values
         return max(values)
@@ -314,6 +312,13 @@ def must_open(filename, mode="r", checkexists=False, skipcheck=False, \
             fp = open(filename, mode)
 
     return fp
+
+def grouped(iterable, n):
+    "s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
+    return zip(*[iter(iterable)]*n)
+
+def pairwise(iterable):
+    return grouped(iterable, 2)
 
 if __name__ == '__main__':
 

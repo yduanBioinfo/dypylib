@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 '''
 Add informations which are retrived from dbfile to infile.
@@ -6,6 +6,16 @@ Add informations which are retrived from dbfile to infile.
 
 import sys
 from dypylib.bio.base import DictFile
+
+def extend_lst(lst, obj):
+    """ Do not split string when extend.
+        Why have to use this function: DictFile object return list
+          when multiple element is chosen, while str when only one
+          element is chosen.
+    """
+    if isinstance(obj, str):
+        obj = [obj]
+    return lst.extend(obj)
 
 def mapper(infile,outfile,dbdata,sep,has_header=True,keycol=0,null=[""],value_header=None):
 
@@ -26,9 +36,8 @@ def mapper(infile,outfile,dbdata,sep,has_header=True,keycol=0,null=[""],value_he
 
     for eachline in infile:
         line_array = eachline.strip("\n").split(sep)
-        #values = dbdata.get(line_array[keycol],null*dbdata.ncols)
         values = dbdata.get(line_array[keycol],null*dbdata.valueLength())
-        line_array.extend(values)
+        extend_lst(line_array, values)
         outfile.write(sep.join(line_array)+"\n")
 
 def parse_value_col(value_col):
