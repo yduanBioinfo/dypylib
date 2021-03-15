@@ -111,10 +111,21 @@ class Fadict(dict):
     def getChr(self,key):
         return self.get(key)
 
+    def _index_checking(self, num):
+        assert isinstance(num, int)
+        if num > 0:
+            return num
+        #else:
+        sys.stderr.write("Warning: sequence is 1-besed\n \
+                While index %d is provided\n" % num)
+        return 1
+
     def _getSeq(self,scaf,st,ed):
         scaf = self.getChr(scaf)
-        if st < 1 or ed < 1:
-            raise ValueError("sequence is 1-based \n")
+        #if st < 1 or ed < 1:
+        #    raise ValueError("sequence is 1-based \n")
+        st = self._index_checking(st)
+        ed = self._index_checking(ed)
         if st > ed:
             st, ed = ed, st
             return scaf[st-1: ed].getRC()
