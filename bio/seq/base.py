@@ -117,7 +117,7 @@ class Fadict(dict):
             return num
         #else:
         sys.stderr.write("Warning: sequence is 1-besed\n \
-                While index %d is provided\n" % num)
+While index %d is provided\n" % num)
         return 1
 
     def _getSeq(self,scaf,st,ed):
