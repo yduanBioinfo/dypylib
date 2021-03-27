@@ -8,10 +8,10 @@ input gtf should only contain exon feature.
 output length, count for exon or transcripts.
 '''
 
-def make_feature_dict(mygff,key="transcript_id"):
+def make_feature_dict(mygff):
     data={}
     for rec in mygff:
-        data.setdefault(rec.attr.get(key),[]).append(rec)
+        data.setdefault(rec.tx_id,[]).append(rec)
     return data
 
 def stat_db(mydb):
@@ -48,7 +48,7 @@ def main(argv):
     parser.add_argument('-t','--gff-type',nargs='?',default='normal',choices=['normal','gc'])
     args = parser.parse_args(argv[1:])
 
-    mygff=Gff(args.infile,fm=args.gff_type,check_sort=True)
+    mygff=Gff(args.infile,fm=args.gff_type,check_sort=False)
     txdb = make_feature_dict(mygff)
     stat_of_tx, length_of_exons = stat_db(txdb)
     if args.outprefix:
