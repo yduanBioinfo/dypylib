@@ -254,11 +254,15 @@ class Gff(object):
 
     gff3_partern = re.compile(r"\s*([^\s=]+)[\s=]+(.*)")
 
-    def __init__(self,infile,mode=1,sep="\t",fm="normal"):
-
+    def __init__(self,infile,mode=1,sep="\t",fm="normal",check_sort=False):
         self.sep = sep
         self.fm = fm
         self.filename, self.infile = open_file(infile)
+        # Use to check duplicated gene/tx.
+        self.check_sort = check_sort
+        if self.check_sort:
+            self.itered_tx = set()
+            self.curr_tx = ''
         
         if mode == 2:
             self.__data = []
@@ -268,37 +272,60 @@ class Gff(object):
             self.isiter = True#this object can be looked as an iterator
 
     def __iter__(self):
-
         return self.iterator()
 
-    def iterator(self):
+    def check_exist(self, name, name_set):
+        if name in name_set:
+            return True
+        name_set.add(name)
+        return False
 
+    def if_gff_sorted(self, rec):
+        # Tx_id information is not available.
+        if self.fm == 'none':
+            return 
+        if rec.tx_id == self.curr_tx:
+            return
+        if self.check_exist(rec.tx_id, self.itered_tx):
+            # gff is not sorted
+            error_info = 'Tx: "%s" is not continuous in file\n' % rec.tx_id
+            sort_help='Input gff/gtf is not sorted\nYou can sort gtf'
+            sort_help+='with the following order:\ncat input.gtf|cgat'
+            sort_help+='gtf2gtf --method=sort --sort-order "'
+            sort_help+='gene+transcript" > sorted.gtf\n'
+            error_info += sort_help
+            raise ValueError(error_info)
+        else:
+            # Meet a new tx.
+            # Update current transcript.
+            self.curr_tx = rec.tx_id
+
+    def iterator(self):
         if not self.isiter:
             #should change to mode 1
             raise TypeError("Fasta mode should change to 1")
         return self.__iterGff()
     
     def next(self):
-
         return self.iterator().next()
 
     def __iterGff(self):
-
         for line in self.infile:
             line=line.strip()
             if len(line)==0 or line[0]=="#":
                 continue
             #yield Gff_rec(line.split(self.sep))
-            yield Gff_rec(line.split(self.sep),self.fm)
+            rec = Gff_rec(line.split(self.sep),self.fm)
+            if self.check_sort:
+                self.if_gff_sorted(rec)
+            yield rec
 
     def loadfile(self):
-        
         #wait for compete
         raise TypeError("object Gff has not stock mode")
     
     @classmethod
     def Parse_attr(self,attr,attr_partern=gff3_partern):
-
         '''Parses Gff attribution string and results it as a dictionary
         '''
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from bio.seq.base import Gff
+from dypylib.bio.seq.base import Gff
 
 '''
 input gtf should only contain exon feature.
@@ -9,7 +9,6 @@ output length, count for exon or transcripts.
 '''
 
 def make_feature_dict(mygff,key="transcript_id"):
-
     data={}
     for rec in mygff:
         data.setdefault(rec.attr.get(key),[]).append(rec)
@@ -49,7 +48,7 @@ def main(argv):
     parser.add_argument('-t','--gff-type',nargs='?',default='normal',choices=['normal','gc'])
     args = parser.parse_args(argv[1:])
 
-    mygff=Gff(args.infile,fm=args.gff_type)
+    mygff=Gff(args.infile,fm=args.gff_type,check_sort=True)
     txdb = make_feature_dict(mygff)
     stat_of_tx, length_of_exons = stat_db(txdb)
     if args.outprefix:
