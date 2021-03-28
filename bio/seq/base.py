@@ -105,7 +105,10 @@ class Fadict(dict):
         faiter.filename, faiter.l_uplim, faiter.l_lowlim
         for seq in faiter:
             if strict and seq.name in self.keys():
-                raise KeyError("Double key: %s has being found. Repick your file or set strict to \"False\"" % seq.name)
+                info = ('Duplicated key: {} has being found. '
+                        'Modify your file or set "strict" '
+                        'to "False"\n').format(seq.name)
+                raise KeyError(info)
             self[seq.name] = seq
 
     def getChr(self,key):
@@ -116,8 +119,8 @@ class Fadict(dict):
         if num > 0:
             return num
         #else:
-        sys.stderr.write("Warning: sequence is 1-besed\n \
-While index %d is provided\n" % num)
+        sys.stderr.write(("Warning: sequence is 1-besed\n"
+            "While index {} is provided\n").format(num))
         return 1
 
     def _getSeq(self,scaf,st,ed):
@@ -288,13 +291,14 @@ class Gff(object):
             return
         if self.check_exist(rec.tx_id, self.itered_tx):
             # gff is not sorted
-            error_info = 'Tx: "%s" is not continuous in file\n' % rec.tx_id
-            sort_help='Input gff/gtf is not sorted\nYou can sort gtf'
-            sort_help+='with the following order:\ncat input.gtf|cgat'
-            sort_help+='gtf2gtf --method=sort --sort-order "'
-            sort_help+='gene+transcript" > sorted.gtf\n'
+            error_info = ('Tx: "{}" is not continuous '
+                'in file\n').format(rec.tx_id)
+            sort_help=('Input gff/gtf is not sorted\nYou can sort gtf'
+                'with the following order:\ncat input.gtf|cgat'
+                'gtf2gtf --method=sort --sort-order "'
+                'gene+transcript" > sorted.gtf\n')
             error_info += sort_help
-            raise ValueError(error_info)
+            raise IndexError(error_info)
         else:
             # Meet a new tx.
             # Update current transcript.
