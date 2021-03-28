@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys, argparse
-from bio.seq.base import GtfDict
+from dypylib.bio.seq.base import GtfDict
 
 def rename_gtf(gtf, outfile, gene_id, tx_id, id_mapping=None):
     if id_mapping:

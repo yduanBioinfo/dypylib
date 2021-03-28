@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from bio.seq.base import Gff, GtfDict
+from dypylib.bio.seq.base import Gff, GtfDict
 
 '''
 Count transcript and gene of input gffs

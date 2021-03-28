@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys, argparse
-from bio.seq.base import GtfDict, check_overlap_e, check_overlap
+from dypylib.bio.seq.base import GtfDict, check_overlap_e, check_overlap
 
 def seperate_by_strand(genes):
     """ Seperate_genes by strand
