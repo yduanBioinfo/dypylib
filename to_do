@@ -1,2 +1,4 @@
-Using entry_points to create command lines.
+1. Using entry_points to create command lines.
 https://click.palletsprojects.com/en/master/setuptools/
+
+2. Remove "--if-trim" option in scripts/subset_fasta.py.

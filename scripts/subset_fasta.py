@@ -113,7 +113,11 @@ def main(argv):
     parser.add_argument('infile',nargs='?',help="fasta file for sampling ",default=sys.stdin,type=argparse.FileType('r'))
     parser.add_argument('-o','--outfile',nargs='?',help="output file",default=sys.stdout,type=argparse.FileType('w'))
     parser.add_argument('-k','--key_file',nargs='?',help="if key_file provided, only sequence in key_file should be keep",type=argparse.FileType('r'))
-    parser.add_argument('-r','--if-trim',help="Whether to trim fasta ID by [SPACE]? Set for yes.",action='store_true')
+    parser.add_argument('-r','--if-trim',action='store_true',\
+        help = ("Whether to trim fasta ID by [SPACE]? Set for yes.\n"
+            "Note: this option will be replaced by --trim-name in "
+            "the upcoming version."))
+    parser.add_argument('--trim-name',help="Trim fasta ID by [SPACE]",action='store_true')
     parser.add_argument('-v','--if-verse',help="Choose sequences outside the key_file rather than inside the key_file",action='store_true')
     parser.add_argument('-t','--filt_type',nargs='?',help="filter type,can be \"ref\", \"basic\" or \"GenCode\"(not avaliable now). The default should be altered to basic.",default="ref")
     parser.add_argument('-l','--lowlim',nargs='?',help="low limits of length",type=int,default=-1)
@@ -126,14 +130,14 @@ def main(argv):
     if args.key_file:
         keys = read_keyf(args.key_file)
         #print(keys)
-        myfa = Fasta(args.infile,l_lowlim=args.lowlim,l_uplim=args.uplim,if_trim=args.if_trim)
+        myfa = Fasta(args.infile,l_lowlim=args.lowlim,l_uplim=args.uplim,if_trim=(args.if_trim or args.trim_name))
         #for key in myfa:
         #    print(key.name)
         #sys.exit()
         filt_type = args.filt_type
         random_fa_with_filter(myfa,keys,args.outfile,args.rand_num,args.over,filt_type,lth=args.row_len,if_verse = args.if_verse)#have option ref_filt
     else:
-        myfa = Falist(args.infile,l_lowlim=args.lowlim,l_uplim=args.uplim,if_trim=args.if_trim) 
+        myfa = Falist(args.infile,l_lowlim=args.lowlim,l_uplim=args.uplim,if_trim=(args.if_trim or args.trim_name)) 
         random_fa(myfa,args.outfile,args.rand_num,args.over,args.row_len)
 
 if __name__ == '__main__':
