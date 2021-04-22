@@ -6,7 +6,7 @@
     ./extract_column.py infile A,B,C > outfile
 """
 import sys,argparse
-from bio.base import LineFileSpliter
+from dypylib.bio.base import LineFileSpliter
 
 def extract_by_index(infile,outfile,index,header=[],sep="\t"):
     if header:
