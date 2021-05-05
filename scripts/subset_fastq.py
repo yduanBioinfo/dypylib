@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-""" Sample fastq file.
-    Usage: cat input.fastq | ./subset_fastq.py - proportion > out.fastq
-    example: cat input.fastq | ./subset_fastq.py - 0.01 > out.fastq 
-    [Subset 1% reads of input.fastq to new file: out.fastq]
+"""Sample fastq file.
+Usage: cat input.fastq | ./subset_fastq.py - proportion > out.fastq
+example: cat input.fastq | ./subset_fastq.py - 0.01 > out.fastq 
+[Subset 1% reads of input.fastq to new file: out.fastq]
 """
 import sys
 
@@ -26,7 +26,10 @@ def conv_proportion_to_skip_number(num):
 
 def main(argv):
     import argparse
-    parser = argparse.ArgumentParser(description="Subet fastq file")
+    parser = argparse.ArgumentParser(\
+    formatter_class = argparse.RawDescriptionHelpFormatter,\
+    description = __doc__)
+
     parser.add_argument('infile',nargs='?',help="Input fastq file, \"-\" for stdin ",type=argparse.FileType('r'))
     parser.add_argument('-o','--outfile',nargs='?',help="output file",default=sys.stdout,type=argparse.FileType('w'))
     parser.add_argument('-p','--proportion',nargs='?',help="Proportion of reads to be output",type=float)
