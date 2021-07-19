@@ -741,9 +741,8 @@ class TxDict(SGENT):
         """ Return a list of introns of this transcript.
         """
         res = []
-        #def init(self,start,end,strand,Chr,gene_id,tx_id):
-        for i in range(len(self.values())-1):
-            exons = list(self.values())
+        exons = sorted(list(self.values()),key=lambda x:x.start)
+        for i in range(len(exons)-1):
             e_0 = exons[i]
             e_1 = exons[i+1]
             _start = e_0.end + 1
