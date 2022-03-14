@@ -22,28 +22,27 @@ def readKeys(infile,sep,has_header=True,keycol=[0]):
         keys.add(get_vals(tmp, keycol))
     return keys
 
-def filter(infile,save_keys,sep,has_header,keycol,outfile):
-
+def _filter(infile,save_keys,sep,has_header,keycol,outfile,mode):
+    """ Core function.
+    mode:{filter,differ}
+    mode_filter: return filter results
+    mode_differ: return differ results
+    """
     if has_header:
         outfile.write(infile.readline())
     #print(save_keys)
     for eachline in infile:
         tmp = eachline.strip("\n").split(sep)
-        if get_vals(tmp,keycol) not in save_keys:
-            #print(get_vals(tmp,keycol))
-            #print(eachline)
-            continue
-        outfile.write(eachline)
+        if (get_vals(tmp,keycol) in save_keys) and mode=="filter":
+            outfile.write(eachline)
+        elif (get_vals(tmp,keycol) not in save_keys) and mode=="differ":
+            outfile.write(eachline)
+
+def filter(infile,save_keys,sep,has_header,keycol,outfile):
+    _filter(infile,save_keys,sep,has_header,keycol,outfile,"filter")
 
 def differ(infile,save_keys,sep,has_header,keycol,outfile):
-
-    if has_header:
-        outfile.write(infile.readline())
-    for eachline in infile:
-        tmp = eachline.strip("\n").split(sep)
-        if get_vals(tmp,keycol) in save_keys:
-            continue
-        outfile.write(eachline)
+    _filter(infile,save_keys,sep,has_header,keycol,outfile,"differ")
 
 def parse_keycol(keycol, sep=","):
     """ convert \"1,2,3,5\" into [1,2,3,5] """
