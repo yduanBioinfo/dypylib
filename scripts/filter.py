@@ -9,12 +9,43 @@
 
 import sys
 
+class CaseInsensitiveSet(set):
+    """Make sense when element is tuple
+    Refers to https://stackoverflow.com/questions/27531211/how-to-get-case-insensitive-python-set"""
+
+    def get_lower(self, item):
+        """Get lower for string or tuple"""
+        if isinstance(item, str):
+            return item.lower()
+        elif isinstance(item, tuple):
+            #print(tuple([self.get_lower(i) for i in item]))
+            return tuple([self.get_lower(i) for i in item])
+        else:
+            return item
+
+    def add(self, item):
+        set.add(self, self.get_lower(item))
+        #try:
+        #    set.add(self, item.lower())
+        #except Exception:# not a string
+        #    set.add(self, item.lower())
+
+    def __contains__(self, item):
+        return set.__contains__(self, self.get_lower(item))
+        #try:
+        #    return set.__contains__(self, item.lower())
+        #except Exception:
+        #    return set.__contains__(self, item)
+
 def get_vals(lst,keycols):
     """ eg. get_vals([a,b,c,d], [0,3]) -> [a,d] """
     return tuple(map(lambda x:lst[x],keycols))
 
-def readKeys(infile,sep,has_header=True,keycol=[0]):
-    keys = set()
+def readKeys(infile, sep, has_header=True, keycol=[0], ignorecase=False):
+    if ignorecase:
+        keys = CaseInsensitiveSet()
+    else:
+        keys = set()
     if has_header:
         infile.readline()
     for eachline in infile:
@@ -60,6 +91,7 @@ def main(argv):
     parser.add_argument('-k2','--keycol2',nargs='?',default="0")
     parser.add_argument('-n1','--has_header1',action='store_false',help="if file1 hasn't header,set this option")
     parser.add_argument('-n2','--has_header2',action='store_false',help='same with n1 but for file2')
+    parser.add_argument('-i','--ignorecase',action='store_true',help='Ignore case')
     parser.add_argument('-m','--mode',nargs='?',default='filter',choices=['filter','differ'])
     args = parser.parse_args(argv[1:])
 
@@ -82,7 +114,7 @@ def main(argv):
         file2=open(args.file2)
     outfile=args.outfile
 
-    keys = readKeys(file2,sep2,has_header2,keycol2)
+    keys = readKeys(file2,sep2,has_header2,keycol2,args.ignorecase)
     if args.mode == "filter":
         filter(file1,keys,sep1,has_header1,keycol1,outfile)
     elif args.mode == "differ":
