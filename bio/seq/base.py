@@ -794,10 +794,16 @@ class GeneDict(SGENT):
         """
         return "\n".join(map(lambda x:x.as_gtf(),self.values()))
 
-    # Get representative transcript of one gene, usally the longest one.
-    # Useful when doing gene function annotation.
-    def get_present_tx(self):
-        pass
+    def get_represent_tx(self):
+        """ Get representative transcript of one gene, usally the longest one.
+            Useful when doing gene function annotation."""
+        max_len = 0 
+        for tx in self.values():
+            if len(tx) > max_len:
+                rep_tx = tx
+                max_len = len(tx)
+        return rep_tx
+
 
 class ChrDict(SGENT):
 
