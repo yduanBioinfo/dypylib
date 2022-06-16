@@ -1424,6 +1424,22 @@ class GtfDict(GenomeDict):
     
     """ Read gtf file, convert to GenomeDict data.
         Only exon are used.
+
+        Example(Maybe correct):
+        genomedict = GtfDict(input_gtf_file)
+        # Get a geneDict object for gene named "EXMP"
+        dict_of_gene = genomedict.get_GeneDict()
+        gene = dict_of_gene.get("EXMP")
+        # Get information of the gene
+        print(gene.start)
+        print(gene.end)
+        print(gene.strand)
+        # Length of gene (sum of exon length), might be wrong, Fix in next version
+        print(len(gene))
+        # How many transcript in a gene
+        print(gene.count)
+
+
     """
     def __init__(self,infile,sep="\t",keeps=set(["exon"]),fm="normal"):
         """ fm[normal,gc,none]: format of gtf/gff file.
@@ -1448,6 +1464,9 @@ class GtfDict(GenomeDict):
             self.add_exon(EXON(rec))
 
     def get_GeneDict(self):
+        """ Get a dict of gene_id - geneDict pair.
+            {gene_id:GeneDict}
+        """
         data = Ordic()
         for mychr in self.values():
             for gene in mychr.values():
