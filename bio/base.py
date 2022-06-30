@@ -317,6 +317,17 @@ def grouped(iterable, n):
     "s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
     return zip(*[iter(iterable)]*n)
 
+def if_str_eq(s1, s2, ignorecase=False):
+    """ Test if two strings are the same. 
+    Return the results of s1 == s2.
+    """
+    assert isinstance(s1, str)
+    assert isinstance(s2, str)
+    if ignorecase:
+        return s1.lower() == s2.lower()
+    else:
+        return s1 == s2
+
 def pairwise(iterable):
     return grouped(iterable, 2)
 
