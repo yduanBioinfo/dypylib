@@ -18,24 +18,15 @@ class CaseInsensitiveSet(set):
         if isinstance(item, str):
             return item.lower()
         elif isinstance(item, tuple):
-            #print(tuple([self.get_lower(i) for i in item]))
             return tuple([self.get_lower(i) for i in item])
         else:
             return item
 
     def add(self, item):
         set.add(self, self.get_lower(item))
-        #try:
-        #    set.add(self, item.lower())
-        #except Exception:# not a string
-        #    set.add(self, item.lower())
 
     def __contains__(self, item):
         return set.__contains__(self, self.get_lower(item))
-        #try:
-        #    return set.__contains__(self, item.lower())
-        #except Exception:
-        #    return set.__contains__(self, item)
 
 def get_vals(lst,keycols):
     """ eg. get_vals([a,b,c,d], [0,3]) -> [a,d] """
