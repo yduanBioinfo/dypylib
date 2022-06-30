@@ -9,6 +9,11 @@ try:
 except:
     pass
 
+try:
+    from case_insensitive_dict import CaseInsensitiveDict
+except:
+    pass
+
 '''
 License: GNU General Public License v3.0 (http://www.gnu.org/licenses/gpl-3.0.html)
 Author: Mr. You Duan
@@ -94,12 +99,15 @@ class Seq(str):
         sys.stderr.write("write2fasta will retired, use to_fasta replace\n")
         self.to_fasta(outfile,lth)
 
-class Fadict(dict):
+class FadictBase(object):
+    """ Dict of fasta file, provide functions. 
+        [seqname: seq]
+        :param: strict
+        :param: if_trim
+        :param: ignorecase
+    """
+    def init(self,infile,strict=False,ignorecase=False,**kwargs):
 
-    def __new__(self,*args,**kwargs):
-        return dict.__new__(self)
-
-    def __init__(self,infile,strict=False,**kwargs):
         faiter = Fasta(infile,**kwargs)
         self.filename, self.l_uplim, self.l_lowlim = \
         faiter.filename, faiter.l_uplim, faiter.l_lowlim
@@ -124,7 +132,10 @@ class Fadict(dict):
         return 1
 
     def _getSeq(self,scaf,st,ed):
-        scaf = self.getChr(scaf)
+        key = scaf
+        scaf = self.getChr(key)
+        if scaf == None:
+            raise KeyError("Scaf \"{}\" was not found, please check it.".format(key))
         #if st < 1 or ed < 1:
         #    raise ValueError("sequence is 1-based \n")
         st = self._index_checking(st)
@@ -171,6 +182,37 @@ class Fadict(dict):
 
     def getNames(self):
         return self.keys()
+
+class FadictIgnore(FadictBase, CaseInsensitiveDict):
+    """ Case unsensitive version of Fadict """
+    
+    def __new__(self,*args,ignorecase=False,**kwargs):
+        return CaseInsensitiveDict.__new__(self)
+
+    def __init__(self,infile,strict=False,ignorecase=False,**kwargs):
+        super(FadictIgnore,self).__init__()
+        self.init(infile,strict,ignorecase,**kwargs)
+
+class FadictCase(FadictBase, dict):
+    """ Case sensitive version of Fadict """
+    
+    def __new__(self,*args,ignorecase=False,**kwargs):
+        return dict.__new__(self)
+
+    def __init__(self,infile,strict=False,ignorecase=False,**kwargs):
+        self.init(infile,strict,ignorecase,**kwargs)
+
+def Fadict(*args,ignorecase=False,**kwargs):
+    """ A psudo-class of Fadict, which provide sequence dict. [seqname: seq]
+        :param: strict
+        :param: if_trim
+        :param: ignorecase
+    """
+
+    if ignorecase == True:
+        return FadictIgnore(*args,ignorecase,**kwargs)
+    else:
+        return FadictCase(*args,ignorecase,**kwargs)
 
 class Falist(list):
 

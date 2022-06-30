@@ -239,6 +239,25 @@ class SetFile(BaseFile, set):
                 item = la[valuepos]
             self.add(item)
 
+class CaseInsensitiveSet(set):
+    """Make sense when element is tuple
+    Refers to https://stackoverflow.com/questions/27531211/how-to-get-case-insensitive-python-set"""
+
+    def get_lower(self, item):
+        """Get lower for string or tuple"""
+        if isinstance(item, str):
+            return item.lower()
+        elif isinstance(item, tuple):
+            return tuple([self.get_lower(i) for i in item])
+        else:
+            return item
+
+    def add(self, item):
+        set.add(self, self.get_lower(item))
+
+    def __contains__(self, item):
+        return set.__contains__(self, self.get_lower(item))
+
 def must_open(filename, mode="r", checkexists=False, skipcheck=False, \
             oappend=False):
     """

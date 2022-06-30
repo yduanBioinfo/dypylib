@@ -19,6 +19,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/yduanBioinfo/dypylib',
+    install_requires = ['case-insensitive-dictionary'],
     #packages=setuptools.find_packages(),
     package_dir={name: '.'},
     packages=[name] + ['.'.join((name, x)) for x in setuptools.find_packages()],
