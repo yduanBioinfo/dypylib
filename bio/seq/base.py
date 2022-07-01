@@ -203,7 +203,8 @@ class FadictCase(FadictBase, dict):
         self.init(infile,strict,ignorecase,**kwargs)
 
 def Fadict(*args,ignorecase=False,**kwargs):
-    """ A psudo-class of Fadict, which provide sequence dict. [seqname: seq]
+    """ A factory function to create Fadict objec, 
+    which provide a dictionary of sequences [seqname: seq].
         :param: strict
         :param: if_trim
         :param: ignorecase
