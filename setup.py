@@ -28,9 +28,9 @@ setuptools.setup(
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Operating System :: OS Independent',
     ],
-    data_files = [
-        ('',['VERSION'])
-    ],
+    #data_files = [
+    #    ('',['VERSION'])
+    #],
     scripts=[
         'scripts/subset_fasta.py',
         'scripts/annot_from_file.py',
