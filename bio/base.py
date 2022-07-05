@@ -23,7 +23,7 @@ class BaseFile(object):
     """
 
     def __init__(self, filename):
-        """Init
+        """
         Args:
             filename:
               A string of filename.
@@ -121,7 +121,7 @@ class LineFileSpliter(LineFileIterator):
     """
 
     def __init__(self,filename, sep="\t", comment=None, has_header=False):
-        """Init
+        """
         Args:
             filename: Name of input file.
             sep: Seperater that used to split line into list. 
