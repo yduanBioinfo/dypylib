@@ -1,18 +1,39 @@
 #!/usr/bin/env python3
 
+"""A collections of basic classes and methods.
+
+The tools for reading/writing files are defined in this collection.
+
+    Typical usage example:
+
+    mydata = LineFileSpliter(infile, sep="\t", comment="#")
+    for l in mydata:
+        print(l[0])
+"""
 import sys
 import logging
 
 class BaseFile(object):
+    """Basic class of File handle
+    
+    Attributes:
+        filename:
+          A string of filename.
+        
+    """
 
     def __init__(self, filename):
+        """Init
+        Args:
+            filename:
+              A string of filename.
+        """
         self.filename = filename
         if filename:
             logging.debug("Load file `{0}`".format(filename))
 
 class LineFile(BaseFile, list):
-    """
-    Generic file parser for line-based files
+    """Generic file parser for line-based files
     """
     def __new__(self,*args,**kwargs):
         return list.__new__(self)
@@ -34,8 +55,7 @@ class ListFile(LineFile):
         super(ListFile, self).__init__(*args, **kwargs, load=True)
 
 class LineFileIterator(LineFile):
-    """
-    Iterator for line file.
+    """Iterator for line file.
     """
     def __init__(self, filename, comment=None, has_header=False):
 
@@ -91,13 +111,26 @@ class LineFileIterator(LineFile):
         return self._header
 
 class LineFileSpliter(LineFileIterator):
-    """
-    Iterator for line file.
-    Eachline should be split into list.
+    """Iterator for line file.
+    
+    Read and convert a file to an iterator. Eachline will be split 
+    into list.
+
+    Attributes:
+        _header: String to keep the head line.
     """
 
     def __init__(self,filename, sep="\t", comment=None, has_header=False):
-
+        """Init
+        Args:
+            filename: Name of input file.
+            sep: Seperater that used to split line into list. 
+            comment: The line start with the comment string will be
+              ignored. Typically, when comment is set to None, every
+              line will keep.
+            has_header: Whether the file has head line. True to skip
+              header, and keep header into _header.
+        """
         self.__sep = sep
         super(LineFileSpliter,self).__init__(filename, comment, has_header)
 
