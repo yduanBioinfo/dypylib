@@ -1,6 +1,5 @@
-# encode: utf-8
-from types import UnicodeType
-from utils import clean_unicode
+#from types import UnicodeType
+from dypylib.pylib.case_insensitive_dict.utils import clean_unicode
 
 
 class CaseInsensitiveDict(dict):
@@ -8,7 +7,7 @@ class CaseInsensitiveDict(dict):
         self.update(*args, **kwargs)
 
     def __setitem__(self, key, value):
-        if isinstance(key, (str, UnicodeType)):
+        if isinstance(key, str):
             key = clean_unicode(key.lower())
         if isinstance(value, dict):
             value = CaseInsensitiveDict(value)
@@ -19,7 +18,7 @@ class CaseInsensitiveDict(dict):
         super(CaseInsensitiveDict, self).__setitem__(key, value)
 
     def __getitem__(self, key):
-        if isinstance(key, str) or isinstance(key, UnicodeType):
+        if isinstance(key, str):
             return super(CaseInsensitiveDict, self).__getitem__(key.lower())
         return super(CaseInsensitiveDict, self).__getitem__(key)
 
