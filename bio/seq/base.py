@@ -9,10 +9,10 @@ try:
 except:
     pass
 
-try:
-    from case_insensitive_dict import CaseInsensitiveDict
-except:
-    pass
+#try:
+from pylib.case_insensitive_dict.case_insensitive_dict import CaseInsensitiveDict
+#except:
+#    pass
 
 '''
 License: GNU General Public License v3.0 (http://www.gnu.org/licenses/gpl-3.0.html)
