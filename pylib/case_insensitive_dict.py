@@ -1,6 +1,10 @@
-#from types import UnicodeType
-from dypylib.pylib.case_insensitive_dict.utils import clean_unicode
-
+# Encode/Decode
+def clean_unicode(value):
+    try:
+        return unicodedata.normalize(
+            'NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    except Exception:
+        return value
 
 class CaseInsensitiveDict(dict):
     def __init__(self, *args, **kwargs):
