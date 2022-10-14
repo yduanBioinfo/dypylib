@@ -1495,11 +1495,12 @@ class BioMapping(Mapping):
             return self.children
 
     def __iter__(self):
+        """Self.keys() are generated here."""
         keys = self.children
         return iter(keys)
 
     def __len__(self):
-        return len(self.keys())
+        return len(self.children)
 
     def get_children(self):
         return self.db.children(self.name)
@@ -1519,11 +1520,7 @@ class Chr(BioMapping):
         return Chr(self.db, name=key)
 
     def __iter__(self):
-        keys = self.children
-        return iter(keys)
-
-    def __len__(self):
-        return len(self.keys())
+        return iter(self.children)
 
     def get_children(self):
         keys = []
@@ -1531,7 +1528,6 @@ class Chr(BioMapping):
         for i in set(c.fetchall()):
             keys.append(i['seqid'])
         return keys
-
 
 class Genome(BioMapping):
     """Genome object.
@@ -1545,20 +1541,20 @@ class Genome(BioMapping):
     def __getitem__(self, key):
         return Chr(self.db, name=key)
 
-    def __len__(self):
-        return len(self.keys())
+    def __iter__(self):
+        self.mapping = 10
+        return iter(self.children)
 
     def get_children(self):
         keys = []
         c = self.db.execute("select DISTINCT seqid from features")
-        for i in set(c.fetchall()):
+        for i in c.fetchall():
             keys.append(i['seqid'])
         return keys
 
     def search(self):
         """Search by feature id"""
         pass
-
     
 def create_genome_using_gffutils(infile, dbfn = ':memory:'):
     """Create Genome object using gffutils

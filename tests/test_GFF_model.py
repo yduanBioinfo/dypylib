@@ -9,9 +9,12 @@ mygenome = create_genome_using_gffutils(test_gtf)
 
 def test_load_GFF():
     target_keys = ['CI01000023', 'CI01000025']
-    #for i in mygenome.keys():
-    #    assert i in target_keys
-    assert set(mygenome.keys()) == set(target_keys)
+    assert len(mygenome.keys()) == 2
+    assert len(mygenome) == 2
+    # Test __contain__
+    for i in target_keys:
+        assert i in mygenome.keys()
+    assert sorted(list(set(mygenome.keys()))) == target_keys
     for k,v in mygenome.items():
         assert k in target_keys
 
