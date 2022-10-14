@@ -1512,8 +1512,7 @@ class Chr(BioMapping):
     """Chromosome object
 
     The default children should be Gene.
-    to-do: init this object from self.db and name
-    !!! get_children !!!
+    to-do: Change __getitem__ to return Gene Object.
     """
 
     def __getitem__(self, key):
@@ -1524,9 +1523,11 @@ class Chr(BioMapping):
 
     def get_children(self):
         keys = []
-        c = self.db.execute("select seqid from features")
+        order = "select id from features where seqid = '%s' AND featuretype = 'gene'" \
+                % self.name
+        c = self.db.execute(order)
         for i in set(c.fetchall()):
-            keys.append(i['seqid'])
+            keys.append(i['id'])
         return keys
 
 class Genome(BioMapping):

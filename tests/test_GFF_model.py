@@ -23,9 +23,11 @@ def test_Genome_getitem():
     mychr = mygenome['CI01000023']
     assert isinstance(mychr, Chr)
     assert mychr.name == 'CI01000023'
-    for gene in mygenome['CI01000023']:
-        print(gene)
-    print("childern")
+    mychr = mygenome['CI01000023']
+    mychildren = mychr.get_children()
+    # Test first and last gene_id is in chromosome
+    assert 'CIWT.8168' in mychildren
+    assert 'CIWT.8138' in mychildren
     #for s in mygenome.db.children('CI01000023'):
     #    print(s)
 
