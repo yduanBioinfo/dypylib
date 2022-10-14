@@ -1545,14 +1545,6 @@ class Genome(BioMapping):
     def __getitem__(self, key):
         return Chr(self.db, name=key)
 
-    #def __iter__(self):
-    #    keys = []
-    #    c = self.db.execute("select seqid from features")
-    #    for i in set(c.fetchall()):
-    #        keys.append(i['seqid'])
-
-    #    return iter(keys)
-
     def __len__(self):
         return len(self.keys())
 
@@ -1562,7 +1554,6 @@ class Genome(BioMapping):
         for i in set(c.fetchall()):
             keys.append(i['seqid'])
         return keys
-
 
     def search(self):
         """Search by feature id"""

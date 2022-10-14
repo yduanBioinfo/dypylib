@@ -9,8 +9,9 @@ mygenome = create_genome_using_gffutils(test_gtf)
 
 def test_load_GFF():
     target_keys = ['CI01000023', 'CI01000025']
-    for i in mygenome.keys():
-        assert i in target_keys
+    #for i in mygenome.keys():
+    #    assert i in target_keys
+    assert set(mygenome.keys()) == set(target_keys)
     for k,v in mygenome.items():
         assert k in target_keys
 
