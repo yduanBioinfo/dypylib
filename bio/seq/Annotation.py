@@ -1475,41 +1475,63 @@ class BioMapping(Mapping):
     def __init__(self, db, *args, name = "", **kwargs):
         self.db = db
         self.name = name
-        self.children = self.db.children(self.name)
-        self.parents = self.db.parents(self.name)
         super(BioMapping,self).__init__(*args, **kwargs)
 
     def __getitem__(self, key):
         return None
 
+    def __getattr__(self, attr):
+        """Don't init children and parents in __int__,
+        rather find it from datbase when is needed.
+
+        This option can avoid loading every relation in
+            python once construct an object.
+        """
+        if attr == 'children':
+            self.children = self.get_children()
+            return self.children
+        if attr == 'parents':
+            self.children = self.get_parents()
+            return self.children
+
     def __iter__(self):
-        #keys = []
         keys = self.children
         return iter(keys)
 
     def __len__(self):
         return len(self.keys())
 
+    def get_children(self):
+        return self.db.children(self.name)
+
+    def get_parents(self):
+        return self.db.parents(self.name)
+
 class Chr(BioMapping):
     """Chromosome object
 
     The default children should be Gene.
     to-do: init this object from self.db and name
+    !!! get_children !!!
     """
 
     def __getitem__(self, key):
         return Chr(self.db, name=key)
 
     def __iter__(self):
-        keys = []
-        c = self.db.execute("select seqid from features")
-        for i in set(c.fetchall()):
-            keys.append(i['seqid'])
-
+        keys = self.children
         return iter(keys)
 
     def __len__(self):
         return len(self.keys())
+
+    def get_children(self):
+        keys = []
+        c = self.db.execute("select seqid from features")
+        for i in set(c.fetchall()):
+            keys.append(i['seqid'])
+        return keys
+
 
 class Genome(BioMapping):
     """Genome object.
@@ -1523,16 +1545,24 @@ class Genome(BioMapping):
     def __getitem__(self, key):
         return Chr(self.db, name=key)
 
-    def __iter__(self):
-        keys = []
-        c = self.db.execute("select seqid from features")
-        for i in set(c.fetchall()):
-            keys.append(i['seqid'])
+    #def __iter__(self):
+    #    keys = []
+    #    c = self.db.execute("select seqid from features")
+    #    for i in set(c.fetchall()):
+    #        keys.append(i['seqid'])
 
-        return iter(keys)
+    #    return iter(keys)
 
     def __len__(self):
         return len(self.keys())
+
+    def get_children(self):
+        keys = []
+        c = self.db.execute("select DISTINCT seqid from features")
+        for i in set(c.fetchall()):
+            keys.append(i['seqid'])
+        return keys
+
 
     def search(self):
         """Search by feature id"""
