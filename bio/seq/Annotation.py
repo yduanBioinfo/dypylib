@@ -1518,17 +1518,12 @@ class Gene(BioMapping):
     def __getitem__(self, key):
         return Gene(self.db, name=key)
 
-    def __iter__(self):
-        return iter(self.children)
-
     def get_children(self):
-        keys = []
-        order = "select id from features where seqid = '%s' AND featuretype = 'transcript'" \
-                % self.name
-        c = self.db.execute(order)
-        for i in set(c.fetchall()):
-            keys.append(i['id'])
-        return keys
+        children = []
+        records = self.db.children(self.name, featuretype = 'transcript')
+        for rec in records:
+            children.append(rec.id)
+        return children
 
 class Chr(BioMapping):
     """Chromosome object
@@ -1561,7 +1556,6 @@ class Genome(BioMapping):
         return Chr(self.db, name=key)
 
     def __iter__(self):
-        self.mapping = 10
         return iter(self.children)
 
     def get_children(self):

@@ -28,11 +28,12 @@ def test_Genome_getitem():
     # Test first and last gene_id is in chromosome
     assert 'CIWT.8168' in mychildren
     assert 'CIWT.8138' in mychildren
-    #for s in mygenome.db.children('CI01000023'):
-    #    print(s)
 
 def test_Gene():
     from bio.seq.Annotation import Gene
     mychr = mygenome['CI01000023']
-    mygene = mychr['CIWT.8168']
+    mygene = mychr['CIWT.8140']
     assert isinstance(mygene, Gene)
+    #for gene in mychr.values():
+    #    for tx in gene.values():
+    #        print(tx.name)
