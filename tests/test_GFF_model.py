@@ -31,10 +31,8 @@ def test_Genome_getitem():
     #for s in mygenome.db.children('CI01000023'):
     #    print(s)
 
-#def test_filter():
-#    tmpfile = NamedTemporaryFile()
-#    res_file = "tests/data/scripts_filter/res_file1_file2_filter.txt"
-#    order = ["filter.py","-n1","-n2","-m","filter","tests/data/scripts_filter/file1.txt","tests/data/scripts_filter/file2.txt","-o",tmpfile.name]
-#    filter_main(order)
-#    assert filecmp.cmp(tmpfile.name, res_file)
-
+def test_Gene():
+    from bio.seq.Annotation import Gene
+    mychr = mygenome['CI01000023']
+    mygene = mychr['CIWT.8168']
+    assert isinstance(mygene, Gene)

@@ -1508,18 +1508,36 @@ class BioMapping(Mapping):
     def get_parents(self):
         return self.db.parents(self.name)
 
+class Gene(BioMapping):
+    """Chromosome object
+
+    The default children should be Gene.
+    to-do: Change __getitem__ to return Transcript Object.
+    """
+
+    def __getitem__(self, key):
+        return Gene(self.db, name=key)
+
+    def __iter__(self):
+        return iter(self.children)
+
+    def get_children(self):
+        keys = []
+        order = "select id from features where seqid = '%s' AND featuretype = 'transcript'" \
+                % self.name
+        c = self.db.execute(order)
+        for i in set(c.fetchall()):
+            keys.append(i['id'])
+        return keys
+
 class Chr(BioMapping):
     """Chromosome object
 
     The default children should be Gene.
-    to-do: Change __getitem__ to return Gene Object.
     """
 
     def __getitem__(self, key):
-        return Chr(self.db, name=key)
-
-    def __iter__(self):
-        return iter(self.children)
+        return Gene(self.db, name=key)
 
     def get_children(self):
         keys = []
