@@ -1478,7 +1478,14 @@ class BioMapping(Mapping):
         super(BioMapping,self).__init__(*args, **kwargs)
 
     def __getitem__(self, key):
-        return None
+        if key not in self:
+            info = "{} is not contained in {}, please check it.\
+                    ".format(key, self.name)
+            raise KeyError(info)
+        return self.db[key]
+
+    def __contains__(self, key):
+        return key in self.children
 
     def __getattr__(self, attr):
         """Don't init children and parents in __int__,
@@ -1508,15 +1515,35 @@ class BioMapping(Mapping):
     def get_parents(self):
         return self.db.parents(self.name)
 
-class Gene(BioMapping):
+class Transcript(BioMapping):
     """Chromosome object
 
     The default children should be Gene.
     to-do: Change __getitem__ to return Transcript Object.
     """
 
+    #def __getitem__(self, key):
+    #    return Gene(self.db, name=key)
+
+    #def get_children(self):
+    #    children = []
+    #    records = self.db.children(self.name, featuretype = 'transcript')
+    #    for rec in records:
+    #        children.append(rec.id)
+    #    return children
+
+class Gene(BioMapping):
+    """Chromosome object
+
+    The default children should be Gene.
+    """
+
     def __getitem__(self, key):
-        return Gene(self.db, name=key)
+        if key not in self:
+            info = "{} is not contained in {}, please check it.\
+                    ".format(key, self.name)
+            raise KeyError(info)
+        return Transcript(self.db, name=key)
 
     def get_children(self):
         children = []
@@ -1532,6 +1559,10 @@ class Chr(BioMapping):
     """
 
     def __getitem__(self, key):
+        if key not in self:
+            info = "{} is not contained in {}, please check it.\
+                    ".format(key, self.name)
+            raise KeyError(info)
         return Gene(self.db, name=key)
 
     def get_children(self):
@@ -1553,6 +1584,10 @@ class Genome(BioMapping):
     """
 
     def __getitem__(self, key):
+        if key not in self:
+            info = "{} is not contained in {}, please check it.\
+                    ".format(key, self.name)
+            raise KeyError(info)
         return Chr(self.db, name=key)
 
     def __iter__(self):
