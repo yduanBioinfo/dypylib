@@ -3,6 +3,7 @@
 import filecmp, pytest
 from tempfile import NamedTemporaryFile
 from bio.seq.Annotation import create_genome_using_gffutils
+from bio.seq.Annotation import Chr, Gene, Transcript
 
 test_gtf = "tests/data/test.gtf"
 mygenome = create_genome_using_gffutils(test_gtf)
@@ -21,7 +22,6 @@ def test_load_GFF():
         assert k in target_keys
 
 def test_Genome_getitem():
-    from bio.seq.Annotation import Chr
     assert isinstance(mychr, Chr)
     assert mychr.name == 'CI01000023'
     mychildren = mychr.get_children_id()
@@ -29,8 +29,18 @@ def test_Genome_getitem():
     assert 'CIWT.8168' in mychildren
     assert 'CIWT.8138' in mychildren
 
+def test_Genome_search():
+    assert isinstance(mygenome.search('CI01000023'),Chr)
+    assert isinstance(mygenome.search('CIWT.8168'),Gene)
+    assert isinstance(mygenome.search('CIWT.8138'),Gene)
+    assert isinstance(mygenome.search('CIWT.8140.8'),Transcript)
+    # Test wrong id
+    from  gffutils.exceptions import FeatureNotFoundError
+    wrong_id = 'CIWT.814094'
+    with pytest.raises(FeatureNotFoundError, match=wrong_id):
+        mygenome.search(wrong_id)
+
 def test_Gene():
-    from bio.seq.Annotation import Gene, Transcript
     assert isinstance(mygene, Gene)
     for gene in mychr.values():
         for tx in gene.values():

@@ -1619,9 +1619,29 @@ class Genome(BioMapping):
             keys.append(i['seqid'])
         return keys
 
-    def search(self):
-        """Search by feature id"""
-        pass
+    def convert_feature(self, feature):
+        """Convert gffutil object to dypylib object"""
+        if feature.featuretype == 'gene':
+            return Gene(self.db, name = feature.id)
+        elif feature.featuretype == 'transcript':
+            return Transcript(self.db, name = feature.id)
+        elif feature.featuretype == 'exon':
+            return Exon(self.db, name = feature.id)
+        elif feature.featuretype == 'cds':
+            return CDS(self.db, name = feature.id)
+        else:
+            return feature
+
+    def search(self, key):
+        """Search by feature id.
+        Except for chromosome, all other ids like gene/transcript id
+            are stored at database.
+        """
+        # Return a chromsome
+        if key in self:
+            return self[key]
+        else:
+            return self.convert_feature(self.db[key])
     
 def create_genome_using_gffutils(infile, dbfn = ':memory:'):
     """Create Genome object using gffutils
