@@ -1495,6 +1495,8 @@ class BioMapping(Mapping):
 
         This option can avoid loading every relation in
             python once construct an object.
+
+        todo: return db attributs
         """
         if attr == 'children':
             self.children = self.get_children()
@@ -1530,6 +1532,10 @@ class newGENT(object):
     def __init__(self, db, *args, name = "", **kwargs):
         self.db = db
         self.name = name
+
+    def __getattr__(self, attr):
+        # Try to return attributs definded in database.
+        return getattr(self.db[self.name], attr)
 
 class CDS(newGENT):
     pass

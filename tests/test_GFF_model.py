@@ -46,7 +46,4 @@ def test_Tx():
 
     for tx in mygene.values():
         for i in tx.values():
-            print(i)
-            print(i.featuretype)
-            print(i.id)
-    #        print(len(i))
+            assert i.featuretype in ['exon','cds']
