@@ -24,7 +24,7 @@ def test_Genome_getitem():
     from bio.seq.Annotation import Chr
     assert isinstance(mychr, Chr)
     assert mychr.name == 'CI01000023'
-    mychildren = mychr.get_children()
+    mychildren = mychr.get_children_id()
     # Test first and last gene_id is in chromosome
     assert 'CIWT.8168' in mychildren
     assert 'CIWT.8138' in mychildren
@@ -44,8 +44,9 @@ def test_Tx():
     with pytest.raises(KeyError):
         mygenome['CIWT.8140.uioui']
 
-    #for tx in mygene.values():
-    #    for i in tx:
-    #        print(i.featuretype)
-    #        print(i.id)
+    for tx in mygene.values():
+        for i in tx.values():
+            print(i)
+            print(i.featuretype)
+            print(i.id)
     #        print(len(i))

@@ -1470,6 +1470,8 @@ class BioMapping(Mapping):
     Data are deposited in database.
     to-do: Make this object a database version of GENT,
         or make a new GENT class (mGENT)which is child of BioMapping.
+
+        get_parents -> get_parents_id like get_children_id
     """
 
     def __init__(self, db, *args, name = "", **kwargs):
@@ -1485,7 +1487,7 @@ class BioMapping(Mapping):
         return self.db[key]
 
     def __contains__(self, key):
-        return key in self.children
+        return key in self.children_id
 
     def __getattr__(self, attr):
         """Don't init children and parents in __int__,
@@ -1500,14 +1502,21 @@ class BioMapping(Mapping):
         if attr == 'parents':
             self.children = self.get_parents()
             return self.children
+        if attr == 'children_id':
+            self.children_id = self.get_children_id()
+            return self.children_id
 
     def __iter__(self):
         """Self.keys() are generated here."""
-        keys = self.children
+        keys = self.children_id
         return iter(keys)
 
     def __len__(self):
-        return len(self.children)
+        return len(self.children_id)
+
+    def get_children_id(self):
+        children = self.db.children(self.name)
+        return [i.id for i in children]
 
     def get_children(self):
         return self.db.children(self.name)
@@ -1515,27 +1524,36 @@ class BioMapping(Mapping):
     def get_parents(self):
         return self.db.parents(self.name)
 
+class newGENT(object):
+    """ Genomic element.
+    """
+    def __init__(self, db, *args, name = "", **kwargs):
+        self.db = db
+        self.name = name
+
+class CDS(newGENT):
+    pass
+class Exon(newGENT):
+    pass
 class Transcript(BioMapping):
     """Chromosome object
-
-    The default children should be Gene.
-    to-do: Change __getitem__ to return Transcript Object.
     """
 
-    #def __getitem__(self, key):
-    #    return Gene(self.db, name=key)
-
-    #def get_children(self):
-    #    children = []
-    #    records = self.db.children(self.name, featuretype = 'transcript')
-    #    for rec in records:
-    #        children.append(rec.id)
-    #    return children
+    def __getitem__(self, key):
+        if key not in self:
+            info = "{} is not contained in {}, please check it.\
+                    ".format(key, self.name)
+            raise KeyError(info)
+        feature = self.db[key]
+        if feature.featuretype == 'exon':
+            return Exon(self.db, name=feature.id)
+        elif feature.featuretype == 'cds':
+            return CDS(self.db, name=feature.id)
+        else:
+            return newGENT(self.db, name=feature.id)
 
 class Gene(BioMapping):
     """Chromosome object
-
-    The default children should be Gene.
     """
 
     def __getitem__(self, key):
@@ -1545,7 +1563,7 @@ class Gene(BioMapping):
             raise KeyError(info)
         return Transcript(self.db, name=key)
 
-    def get_children(self):
+    def get_children_id(self):
         children = []
         records = self.db.children(self.name, featuretype = 'transcript')
         for rec in records:
@@ -1554,8 +1572,6 @@ class Gene(BioMapping):
 
 class Chr(BioMapping):
     """Chromosome object
-
-    The default children should be Gene.
     """
 
     def __getitem__(self, key):
@@ -1565,7 +1581,7 @@ class Chr(BioMapping):
             raise KeyError(info)
         return Gene(self.db, name=key)
 
-    def get_children(self):
+    def get_children_id(self):
         keys = []
         order = "select id from features where seqid = '%s' AND featuretype = 'gene'" \
                 % self.name
@@ -1590,10 +1606,7 @@ class Genome(BioMapping):
             raise KeyError(info)
         return Chr(self.db, name=key)
 
-    def __iter__(self):
-        return iter(self.children)
-
-    def get_children(self):
+    def get_children_id(self):
         keys = []
         c = self.db.execute("select DISTINCT seqid from features")
         for i in c.fetchall():
