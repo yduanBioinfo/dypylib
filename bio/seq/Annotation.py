@@ -1495,18 +1495,18 @@ class BioMapping(Mapping):
 
         This option can avoid loading every relation in
             python once construct an object.
-
-        todo: return db attributs
         """
         if attr == 'children':
             self.children = self.get_children()
             return self.children
-        if attr == 'parents':
+        elif attr == 'parents':
             self.children = self.get_parents()
             return self.children
-        if attr == 'children_id':
+        elif attr == 'children_id':
             self.children_id = self.get_children_id()
             return self.children_id
+        else:
+            return getattr(self.db[self.name], attr)
 
     def __iter__(self):
         """Self.keys() are generated here."""

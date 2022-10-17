@@ -41,6 +41,8 @@ def test_Tx():
     assert 'CIWT.8140.asdfui' not in mygenome
     assert 'CIWT.8140.asdfui' not in mygene
     assert 'CIWT.8140' not in mygene
+    assert mygene.id == 'CIWT.8140'
+
     with pytest.raises(KeyError):
         mygenome['CIWT.8140.uioui']
 
