@@ -1562,6 +1562,12 @@ class BioMapping(Mapping, newGENT):
         return len(self.children_id)
 
     def get_children_id(self):
+        if self.engine == 'gffutils':
+            return self._gffutils_get_children_id()
+        else:
+            raise TypeError("Only gffutils have get_children_id function")
+
+    def _gffutils_get_children_id(self):
         children = self.db.children(self.name)
         return [i.id for i in children]
 
@@ -1623,9 +1629,6 @@ class Gene(BioMapping):
             raise KeyError(info)
         return Transcript(self.db, name=key, engine='gffutils')
 
-    def get_children_id(self):
-        return self._gffutils_get_children_id()
-
     def _gffutils_get_children_id(self):
         children = []
         records = self.db.children(self.name, featuretype = 'transcript')
@@ -1646,9 +1649,6 @@ class Chr(BioMapping):
                     ".format(key, self.name)
             raise KeyError(info)
         return Gene(self.db, name=key, engine='gffutils')
-
-    def get_children_id(self):
-        return self._gffutils_get_children_id()
 
     def _gffutils_get_children_id(self):
         keys = []
@@ -1677,9 +1677,6 @@ class Genome(BioMapping):
                     ".format(key, self.name)
             raise KeyError(info)
         return Chr(self.db, name=key, engine='gffutils')
-
-    def get_children_id(self):
-        return self._gffutils_get_children_id()
 
     def _gffutils_get_children_id(self):
         keys = []
