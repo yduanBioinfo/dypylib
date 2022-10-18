@@ -705,6 +705,7 @@ class ChrDict(SGENT):
         return self.get_count()
 
 class GenomeDict(SGENT):
+    """to-do: Remove this object"""
 
     def add_exon(self,exon):
         if exon.Chr in self.keys():
@@ -1273,7 +1274,7 @@ class GffDict(GenomeDict):
     def conv_gffdict2tx_level(self):
         return self.get_TxDict()
 
-class GtfDict(GenomeDict):
+class GtfDict(SGENT):
     
     """ Read gtf file, convert to GenomeDict data.
         Only exon are used.
@@ -1315,6 +1316,28 @@ class GtfDict(GenomeDict):
                 rec.tx_id is None):
                 continue
             self.add_exon(EXON(rec))
+
+    def __len__(self):
+        return self.get_count()
+
+    def add_exon(self,exon):
+        if exon.Chr in self.keys():
+            self[exon.Chr].add_exon(exon)
+        else:
+            self.add_e(ChrDict(GeneDict(TxDict([exon]))))
+
+    def add_e(self,gene):
+        assert isinstance(gene,ChrDict)
+        super(GtfDict,self).add_e(gene)
+
+    def add_gene(self,gene):
+        self.add_e(ChrDict(gene))
+
+    def add_gene_rec(self,rec):
+        gene = GeneDict(rec=rec)
+
+    def check_strand(self,e):
+        pass
 
     def get_GeneDict(self):
         """ Get a dict of gene_id - geneDict pair.
