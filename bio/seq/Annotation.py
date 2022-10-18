@@ -1464,7 +1464,20 @@ def open_file(infile):
 
 from _collections_abc import Mapping
 
-class BioMapping(Mapping):
+class newGENT(object):
+    """ Genomic element.
+    """
+    def __init__(self, db, *args, name = "", engine="dypylib",\
+            **kwargs):
+        self.db = db
+        self.name = name
+        self.engine = engine
+
+    def __getattr__(self, attr):
+        # Try to return attributs definded in database.
+        return getattr(self.db[self.name], attr)
+
+class BioMapping(Mapping, newGENT):
     """Mapping object for biology purpose.
     
     Data are deposited in database.
@@ -1473,11 +1486,6 @@ class BioMapping(Mapping):
 
         get_parents -> get_parents_id like get_children_id
     """
-
-    def __init__(self, db, *args, name = "", **kwargs):
-        self.db = db
-        self.name = name
-        super(BioMapping,self).__init__(*args, **kwargs)
 
     def __getitem__(self, key):
         if key not in self:
@@ -1526,16 +1534,6 @@ class BioMapping(Mapping):
     def get_parents(self):
         return self.db.parents(self.name)
 
-class newGENT(object):
-    """ Genomic element.
-    """
-    def __init__(self, db, *args, name = "", **kwargs):
-        self.db = db
-        self.name = name
-
-    def __getattr__(self, attr):
-        # Try to return attributs definded in database.
-        return getattr(self.db[self.name], attr)
 
 class CDS(newGENT):
     pass
