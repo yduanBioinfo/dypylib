@@ -1492,14 +1492,14 @@ from _collections_abc import Mapping
 class newGENT(object):
     """ Genomic element.
     """
-    def __init__(self, db, *args, name = "", engine="dypylib",\
-            **kwargs):
+    #def __init__(self, db, *args, name = "", engine="dypylib",\
+    #        **kwargs):
+    def __init__(self, *args, engine="dypylib", **kwargs):
         """Should make a function to ensure self.db = self.db,
         self.engine = self.engine when create from newGENT
         """
-        self.engine = engine
-        if self.engine == 'gffutils':
-            self._gffutils_init__(db, *args, name = name, **kwargs)
+        if engine == 'gffutils':
+            self._gffutils_init__(*args, **kwargs)
 
     def __getattr__(self, attr):
         # Try to return attributs definded in database.
@@ -1508,6 +1508,7 @@ class newGENT(object):
 
     def _gffutils_init__(self, db, *args, name = "",\
             **kwargs):
+        self.engine = 'gffutils'
         self.db = db
         self.name = name
 
