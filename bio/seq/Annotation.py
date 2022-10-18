@@ -1293,6 +1293,8 @@ class GtfDict(SGENT):
         # How many transcript in a gene
         print(gene.count)
 
+        to-do: Rename this object as Genome,
+        and keep this object as alias of Genome
 
     """
     def __init__(self,infile,sep="\t",keeps=set(["exon"]),fm="normal"):
@@ -1492,11 +1494,24 @@ class newGENT(object):
     """
     def __init__(self, db, *args, name = "", engine="dypylib",\
             **kwargs):
-        self.db = db
-        self.name = name
+        """Should make a function to ensure self.db = self.db,
+        self.engine = self.engine when create from newGENT
+        """
         self.engine = engine
+        if self.engine == 'gffutils':
+            self._gffutils_init__(db, *args, name = name, **kwargs)
 
     def __getattr__(self, attr):
+        # Try to return attributs definded in database.
+        if self.engine == 'gffutils':
+            return self._gffutils_getattr__(attr)
+
+    def _gffutils_init__(self, db, *args, name = "",\
+            **kwargs):
+        self.db = db
+        self.name = name
+
+    def _gffutils_getattr__(self, attr):
         # Try to return attributs definded in database.
         return getattr(self.db[self.name], attr)
 
@@ -1514,7 +1529,7 @@ class BioMapping(Mapping, newGENT):
         if key not in self:
             info = "{} is not contained in {}, please check it.\
                     ".format(key, self.name)
-            raise KeyError(info)
+            raise Keself.dbyError(info)
         return self.db[key]
 
     def __contains__(self, key):
@@ -1573,11 +1588,11 @@ class Transcript(BioMapping):
             raise KeyError(info)
         feature = self.db[key]
         if feature.featuretype == 'exon':
-            return Exon(self.db, name=feature.id)
+            return Exon(self.db, name=feature.id, engine='gffutils')
         elif feature.featuretype == 'cds':
-            return CDS(self.db, name=feature.id)
+            return CDS(self.db, name=feature.id, engine='gffutils')
         else:
-            return newGENT(self.db, name=feature.id)
+            return newGENT(self.db, name=feature.id, engine='gffutils')
 
 class Gene(BioMapping):
     """Chromosome object
@@ -1588,7 +1603,7 @@ class Gene(BioMapping):
             info = "{} is not contained in {}, please check it.\
                     ".format(key, self.name)
             raise KeyError(info)
-        return Transcript(self.db, name=key)
+        return Transcript(self.db, name=key, engine='gffutils')
 
     def get_children_id(self):
         children = []
@@ -1606,7 +1621,7 @@ class Chr(BioMapping):
             info = "{} is not contained in {}, please check it.\
                     ".format(key, self.name)
             raise KeyError(info)
-        return Gene(self.db, name=key)
+        return Gene(self.db, name=key, engine='gffutils')
 
     def get_children_id(self):
         keys = []
@@ -1631,7 +1646,7 @@ class Genome(BioMapping):
             info = "{} is not contained in {}, please check it.\
                     ".format(key, self.name)
             raise KeyError(info)
-        return Chr(self.db, name=key)
+        return Chr(self.db, name=key, engine='gffutils')
 
     def get_children_id(self):
         keys = []
@@ -1643,13 +1658,13 @@ class Genome(BioMapping):
     def convert_feature(self, feature):
         """Convert gffutil object to dypylib object"""
         if feature.featuretype == 'gene':
-            return Gene(self.db, name = feature.id)
+            return Gene(self.db, name = feature.id, engine='gffutils')
         elif feature.featuretype == 'transcript':
-            return Transcript(self.db, name = feature.id)
+            return Transcript(self.db, name = feature.id, engine='gffutils')
         elif feature.featuretype == 'exon':
-            return Exon(self.db, name = feature.id)
+            return Exon(self.db, name = feature.id, engine='gffutils')
         elif feature.featuretype == 'cds':
-            return CDS(self.db, name = feature.id)
+            return CDS(self.db, name = feature.id, engine='gffutils')
         else:
             return feature
 
@@ -1680,7 +1695,7 @@ def create_genome_using_gffutils(infile, dbfn = ':memory:'):
     return create_genome_from_gffutils_db(gff_db)
 
 def create_genome_from_gffutils_db(db):
-    return Genome(db)
+    return Genome(db, engine = 'gffutils')
 
 def test_genome_object(test_gtf):
     mygenome = create_genome_using_gffutils(test_gtf)
