@@ -1492,27 +1492,25 @@ from _collections_abc import Mapping
 class newGENT(object):
     """ Genomic element.
     """
-    #def __init__(self, db, *args, name = "", engine="dypylib",\
-    #        **kwargs):
     def __init__(self, *args, engine="dypylib", **kwargs):
         """Should make a function to ensure self.db = self.db,
         self.engine = self.engine when create from newGENT
         """
         if engine == 'gffutils':
-            self._gffutils_init__(*args, **kwargs)
+            self._gffutils__init__(*args, **kwargs)
 
     def __getattr__(self, attr):
         # Try to return attributs definded in database.
         if self.engine == 'gffutils':
-            return self._gffutils_getattr__(attr)
+            return self._gffutils__getattr__(attr)
 
-    def _gffutils_init__(self, db, *args, name = "",\
+    def _gffutils__init__(self, db, *args, name = "",\
             **kwargs):
         self.engine = 'gffutils'
         self.db = db
         self.name = name
 
-    def _gffutils_getattr__(self, attr):
+    def _gffutils__getattr__(self, attr):
         # Try to return attributs definded in database.
         return getattr(self.db[self.name], attr)
 
@@ -1527,11 +1525,8 @@ class BioMapping(Mapping, newGENT):
     """
 
     def __getitem__(self, key):
-        if key not in self:
-            info = "{} is not contained in {}, please check it.\
-                    ".format(key, self.name)
-            raise Keself.dbyError(info)
-        return self.db[key]
+        if self.engine == 'gffutils':
+            return self._gffutils__getitem__(key)
 
     def __contains__(self, key):
         return key in self.children_id
@@ -1543,6 +1538,9 @@ class BioMapping(Mapping, newGENT):
         This option can avoid loading every relation in
             python once construct an object.
         """
+        return self._gffutils__getattr__(attr)
+
+    def _gffutils__getattr__(self, attr):
         if attr == 'children':
             self.children = self.get_children()
             return self.children
@@ -1568,10 +1566,23 @@ class BioMapping(Mapping, newGENT):
         return [i.id for i in children]
 
     def get_children(self):
+        return self._gffutils_get_children()
+
+    def _gffutils_get_children(self):
         return self.db.children(self.name)
 
     def get_parents(self):
+        return self._gffutils_get_parents()
+
+    def _gffutils_get_parents(self):
         return self.db.parents(self.name)
+
+    def _gffutils__getitem__(self, key):
+        if key not in self:
+            info = "{} is not contained in {}, please check it.\
+                    ".format(key, self.name)
+            raise Keself.dbyError(info)
+        return self.db[key]
 
 
 class CDS(newGENT):
@@ -1583,6 +1594,9 @@ class Transcript(BioMapping):
     """
 
     def __getitem__(self, key):
+        return self._gffutils__getitem__(key)
+
+    def _gffutils__getitem__(self, key):
         if key not in self:
             info = "{} is not contained in {}, please check it.\
                     ".format(key, self.name)
@@ -1600,6 +1614,9 @@ class Gene(BioMapping):
     """
 
     def __getitem__(self, key):
+        return self._gffutils__getitem__(key)
+
+    def _gffutils__getitem__(self, key):
         if key not in self:
             info = "{} is not contained in {}, please check it.\
                     ".format(key, self.name)
@@ -1607,6 +1624,9 @@ class Gene(BioMapping):
         return Transcript(self.db, name=key, engine='gffutils')
 
     def get_children_id(self):
+        return self._gffutils_get_children_id()
+
+    def _gffutils_get_children_id(self):
         children = []
         records = self.db.children(self.name, featuretype = 'transcript')
         for rec in records:
@@ -1618,6 +1638,9 @@ class Chr(BioMapping):
     """
 
     def __getitem__(self, key):
+        return self._gffutils__getitem__(key)
+
+    def _gffutils__getitem__(self, key):
         if key not in self:
             info = "{} is not contained in {}, please check it.\
                     ".format(key, self.name)
@@ -1625,6 +1648,9 @@ class Chr(BioMapping):
         return Gene(self.db, name=key, engine='gffutils')
 
     def get_children_id(self):
+        return self._gffutils_get_children_id()
+
+    def _gffutils_get_children_id(self):
         keys = []
         order = "select id from features where seqid = '%s' AND featuretype = 'gene'" \
                 % self.name
@@ -1643,6 +1669,9 @@ class Genome(BioMapping):
     """
 
     def __getitem__(self, key):
+        return self._gffutils__getitem__(key)
+
+    def _gffutils__getitem__(self, key):
         if key not in self:
             info = "{} is not contained in {}, please check it.\
                     ".format(key, self.name)
@@ -1650,6 +1679,9 @@ class Genome(BioMapping):
         return Chr(self.db, name=key, engine='gffutils')
 
     def get_children_id(self):
+        return self._gffutils_get_children_id()
+
+    def _gffutils_get_children_id(self):
         keys = []
         c = self.db.execute("select DISTINCT seqid from features")
         for i in c.fetchall():
@@ -1657,6 +1689,9 @@ class Genome(BioMapping):
         return keys
 
     def convert_feature(self, feature):
+        return self._gffutils_convert_feature(feature)
+
+    def _gffutils_convert_feature(self, feature):
         """Convert gffutil object to dypylib object"""
         if feature.featuretype == 'gene':
             return Gene(self.db, name = feature.id, engine='gffutils')
@@ -1670,6 +1705,9 @@ class Genome(BioMapping):
             return feature
 
     def search(self, key):
+        return self._gffutils_search(key)
+    
+    def _gffutils_search(self, key):
         """Search by feature id.
         Except for chromosome, all other ids like gene/transcript id
             are stored at database.
