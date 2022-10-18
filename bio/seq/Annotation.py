@@ -1531,16 +1531,13 @@ class BioMapping(Mapping, newGENT):
     def __contains__(self, key):
         return key in self.children_id
 
-    def __getattr__(self, attr):
+    def _gffutils__getattr__(self, attr):
         """Don't init children and parents in __int__,
         rather find it from datbase when is needed.
 
         This option can avoid loading every relation in
             python once construct an object.
         """
-        return self._gffutils__getattr__(attr)
-
-    def _gffutils__getattr__(self, attr):
         if attr == 'children':
             self.children = self.get_children()
             return self.children
@@ -1599,9 +1596,6 @@ class Transcript(BioMapping):
     """Chromosome object
     """
 
-    def __getitem__(self, key):
-        return self._gffutils__getitem__(key)
-
     def _gffutils__getitem__(self, key):
         if key not in self:
             info = "{} is not contained in {}, please check it.\
@@ -1618,9 +1612,6 @@ class Transcript(BioMapping):
 class Gene(BioMapping):
     """Chromosome object
     """
-
-    def __getitem__(self, key):
-        return self._gffutils__getitem__(key)
 
     def _gffutils__getitem__(self, key):
         if key not in self:
@@ -1639,9 +1630,6 @@ class Gene(BioMapping):
 class Chr(BioMapping):
     """Chromosome object
     """
-
-    def __getitem__(self, key):
-        return self._gffutils__getitem__(key)
 
     def _gffutils__getitem__(self, key):
         if key not in self:
@@ -1667,9 +1655,6 @@ class Genome(BioMapping):
 
     to-do: Rewrite SGENT.
     """
-
-    def __getitem__(self, key):
-        return self._gffutils__getitem__(key)
 
     def _gffutils__getitem__(self, key):
         if key not in self:
