@@ -3,7 +3,7 @@
 import filecmp, pytest
 from tempfile import NamedTemporaryFile
 from bio.seq.Annotation import create_genome_using_gffutils
-from bio.seq.Annotation import Chr, Gene, Transcript
+from bio.seq.Annotation import Genome, Chr, Gene, Transcript
 from bio.seq.Annotation import GtfDict
 
 test_gtf = "tests/data/test.gtf"
@@ -67,10 +67,16 @@ def test_search_method_of_Genome():
         mygenome.search(wrong_id)
 
 def test_GtfDict():
+    ###from bio.seq.Annotation import Test, Last_of_us,sub_test
+    #####b = Test('last_of_us','asdfw','fawew','werf')
+    #####print(isinstance(b, Test))
+    #####with pytest.raises(TypeError):
+    #####    l = Last_of_us()
+    #####sub_test()
     global mygenome, mychr, mygene
-    mygenome = GtfDict(test_gtf)
-    mychr = mygenome['CI01000023']
-    mygene = mychr['CIWT.8140']
-    test_on_genome_object()
+    mygenome = Genome(test_gtf, engine="dypylib")
+    ##mychr = mygenome['CI01000023']
+    ##mygene = mychr['CIWT.8140']
+    ##test_on_genome_object()
     #test_on_chr_object()
     #test_on_Gene_object()

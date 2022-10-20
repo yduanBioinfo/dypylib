@@ -10,6 +10,7 @@ functions: write_fasta
 '''
 
 import sys, re, string, itertools, copy
+from abc import ABC
 import gffutils, sqlite3
 from collections import OrderedDict as Ordic
 try:
@@ -1297,7 +1298,7 @@ class GtfDict(SGENT):
         and keep this object as alias of Genome
 
     """
-    def __init__(self,infile,sep="\t",keeps=set(["exon"]),fm="normal"):
+    def __init__(self,infile,engine="dypylib",sep="\t",keeps=set(["exon"]),fm="normal"):
         """ fm[normal,gc,none]: format of gtf/gff file.
                 normal, in most situation, normal format are suitable.
                 gc, grass carp gtf V1.
@@ -1544,6 +1545,35 @@ class newGENT(object):
         if self.start > self.end:
             self.start, self.end = self.end, self.start
 
+class Test_main(type):
+    #def __new__():
+    #    pass
+    def __call__(self, *args, **kwargs):
+        if len(args) == 0 or args[0] != 'factory':
+            raise TypeError("Can't instantiate directly")
+
+class Last_of_us(metaclass=Test_main):
+    def __init__(self, *args, **kwargs):
+        print("init Last_of_us")
+        print(type(self))
+
+class Uncharted(object):
+    def __init__(self):
+        print("init Uncharted")
+        print(type(self))
+
+class Test(ABC):
+    games = {'last_of_us': Last_of_us, 'uncharted': Uncharted}
+    def __new__(cls, name, *args, **kwargs):
+        if name in cls.games:
+            myclass = cls.games[name]('factory', *args, **kwargs)
+            cls.register(cls.games[name])
+            return myclass
+        else:
+            return PSGame()
+
+class sub_test(Test):
+    pass
 
 class BioMapping(Mapping, newGENT):
     """Mapping object for biology purpose.
@@ -1553,12 +1583,6 @@ class BioMapping(Mapping, newGENT):
         or make a new GENT class (mGENT)which is child of BioMapping.
 
         get_parents -> get_parents_id like get_children_id
-
-    Doc of dypylib 
-    Segments genome element
-    like: transcripts, genes.
-    When parse gff record, basic information like start, end, strand will be load first.
-    While comes across gtf file, basic infromation was acquired through add_exon methods.
     """
     def __new__(self,*args,engine = "dypylib",**kwargs):
         if engine == "dypylib":
@@ -1635,165 +1659,13 @@ class BioMapping(Mapping, newGENT):
             raise Keself.dbyError(info)
         return self.db[key]
 
-    # dypylib methods.
-    def _dy__init__(self,es=[],perm_op=True,static=False,start=float("inf"),end=-float("inf"),strand=".",rec=None):
-        # es: elements
-        # perm_op: permit elements overlap
-        # static: when static is True, start, end, strand, length option should not be update by add_exon.
-        if rec == None:
-            self._init_from_GENTs(es,perm_op,static,start,end,strand)
-        elif isinstance(rec,Gff_rec):
-            self._init_from_rec(rec,perm_op)
-        else:
-            sys.stderr.write("rec type is wrong\n")
-            sys.exit(1)
-
-    ###def __len__(self):
-    ###    return self.get_length()
-
-    def _init_from_GENTs(self,es,perm_op,static,start,end,strand):
-        self.start = start
-        self.end = end
-        self.strand = strand
-        if static:
-            self._init_static()
-        else:
-            self.static = False
-            self._length = 0
-        self._count = 0
-        #self.extend(es)
-        # Whether to permit elements overlap
-        self.perm_op = perm_op
-
-        # Add single element
-        if type(es) != list:
-            es = [es]
-        self.add_es(es)
-
-    def _init_static(self):
-        self._adj_pos(self)
-        self._length = self.start - self.end
-        self.static = True
-
-    def _init_from_gffutils(self, db, key):
-        """Init Object from a gffutils database"""
-        pass
-
-    def _init_from_rec(self,rec,perm_op):
-        # Bugs!!!
-        self.static = True
-        self.start = rec.start
-        self.end = rec.end
-        self.strand = rec.strand
-        # maybe only gc gff
-        self.ID = rec.attr.get("ID")
-        self.name = rec.attr.get("Name")
-        self._count = 0
-        self.perm_op = perm_op
-
-    def add_es(self,es):
-        for e in es:
-            self.add_e(e)
-
-    def _update_info(self,e):
-        if self.static:
-            sys.stderr.write("Wrong update calling.\n")
-        self._length += len(e)
-        self.start = min(self.start, e.start)
-        self.end = max(self.end, e.end)
-
-    def add_e(self,e):
-        self.check_strand(e)
-        self.check_overlap(e)
-        self.add_data(e)
-        self.add_len(e)
-        if not self.static:
-            self._update_info(e)
-
-    def check_strand(self,e):
-        if self.strand == ".":
-            self.strand = e.strand
-        if self.strand != e.strand:
-            raise ValueError("strand of exon and transcript should be identical.\n")
-
-    # Append
-    def add_data(self,e, ID = None):
-        if not ID:
-            try:
-                ID = e.ID
-            except:
-                ID = self.get_count()
-        if ID in self.keys():
-            raise KeyError("Reapeat ID, will cause cover issue.\n")
-        self[ID] = e
-
-    def add_len(self,e):
-        # non-overlap
-        self._count += 1
-
-    def check_overlap(self,e2):
-        if self.perm_op:
-            return
-        if check_overlap_e(self,e2):
-            sys.stderr.write("%s, %s, %s\n"%(e2.Chr,e2.gene_id,e2.tx_id))
-            sys.stderr.write("start1, end1, start2, end2 = %d,%d,%d,%d\n"%(self.start,self.end,e2.start,e2.end))
-            raise TypeError("Overlapped elements are not permited.\n")
-
-    def any_overlap(self):
-        tmp = sorted(self.values(),key = lambda x:x.start)
-        for i in range(self.get_count()-1):
-            if check_overlap_e(tmp[i],tmp[i+1]):
-                return True
-        return False
-
-    # Get transcript start site.
-    def get_tss(self):
-        return self.get_5p_end()
-
-    def get_tes(self):
-        return self.get_3p_end()
-
-    def get_5p_end(self):
-        return self._get_tss()
-
-    def get_3p_end(self):
-        return self._get_tes()
-
-    def _get_tss(self):
-        st = self.start
-        ed = self.end
-        if st > ed:
-            st, ed = ed, st
-        if self.strand == "-":
-            return ed
-        else:
-            return st
-
-    # Get transcript end site.
-    def _get_tes(self):
-        st = self.start
-        ed = self.end
-        if st > ed:
-            st, ed = ed, st
-        if self.strand == "-":
-            return st
-        else:
-            return ed
-
-    def get_count(self):
-        return self._count
-
-    def get_length(self):
-        return self._length
-
-    def get_sorted_values(self,key = lambda x: x.start):
-        return sorted(self.values(),key = key)
-
-class CDS(newGENT):
+class GffutilsCDS(newGENT):
     pass
-class Exon(newGENT):
+
+class GffutilsExon(newGENT):
     pass
-class Transcript(BioMapping):
+
+class GffutilsTranscript(BioMapping):
     """Chromosome object
     !!! to-do !!!
     TxDict -> Transcript
@@ -1812,55 +1684,7 @@ class Transcript(BioMapping):
         else:
             return newGENT(self.db, name=feature.id, engine='gffutils')
 
-    def _dy__init__(self,*args,**kwargs):
-        kwargs["perm_op"] = False
-        super(Transcript,self).__init__(*args,**kwargs)
-
-    def add_exon(self,exon):
-        self.add_e(exon)
-
-    def add_e(self,exon):
-        assert isinstance(exon,EXON)
-        self.ID = exon.tx_id
-        self.Chr = exon.Chr
-        self.gene_id = exon.gene_id
-        super(Transcript,self).add_e(exon)
-
-    def edit_gene_id(self,val):
-        """ Alter gene_id
-        """
-        self.gene_id = val
-        for exon in self.values():
-            exon.edit_gene_id(val)
-
-    def edit_tx_id(self,val):
-        """ Alter tx_id
-        """
-        self.ID = val
-        for exon in self.values():
-            exon.edit_tx_id(val)
-
-    def as_gtf(self):
-        """ Get string in GTF format.
-        """
-        return "\n".join(map(lambda x:x.as_gtf(),self.values()))
-
-    def get_introns(self):
-        """ Return a list of introns of this transcript.
-        """
-        res = []
-        exons = sorted(list(self.values()),key=lambda x:x.start)
-        for i in range(len(exons)-1):
-            e_0 = exons[i]
-            e_1 = exons[i+1]
-            _start = e_0.end + 1
-            _end = e_1.start - 1
-            if _start > _end:
-                raise ValueError("The end of the intron must be bigger than the start")
-            res.append(INTRON(_start,_end,e_0.strand,e_0.Chr,e_0.gene_id,e_0.tx_id))
-        return res
-
-class Gene(BioMapping):
+class GffutilsGene(BioMapping):
     """Chromosome object
     !!! GeneDict -> Gene !!!
     """
@@ -1878,59 +1702,8 @@ class Gene(BioMapping):
         for rec in records:
             children.append(rec.id)
         return children
-    
-    ## dypylib
-    def add_exon(self,exon):
-        if exon.tx_id in self.keys():
-            # transcript add exon
-            self[exon.tx_id].add_exon(exon)
-            super(GeneDict,self)._update_info(exon)
-        else:
-            self.add_e(Transcript([exon]))
 
-    def add_tx(self,tx):
-        self.add_e(tx)
-
-    def add_e(self,tx):
-        assert isinstance(tx,Transcript)
-        self.ID = tx.gene_id
-        self.Chr = tx.Chr
-        super(GeneDict,self).add_e(tx)
-
-    def edit_gene_id(self,val):
-        """ Alter gene_id
-        """
-        self.ID = val
-        for tx in self.values():
-            tx.edit_gene_id(val)
-
-    def merge(self,e,new_id=None):
-        """ merge self and SGENT e.
-        """
-        out = copy.deepcopy(self)
-        out.start = min(self.start,e.start)
-        out.end = max(self.end,e.end)
-        out.update(e)
-        if new_id:
-            out.edit_gene_id(new_id)
-        return out
-
-    def as_gtf(self):
-        """ For GTF
-        """
-        return "\n".join(map(lambda x:x.as_gtf(),self.values()))
-
-    def get_represent_tx(self):
-        """ Get representative transcript of one gene, usally the longest one.
-            Useful when doing gene function annotation."""
-        max_len = 0 
-        for tx in self.values():
-            if len(tx) > max_len:
-                rep_tx = tx
-                max_len = len(tx)
-        return rep_tx
-
-class Chr(BioMapping):
+class GffutilsChr(BioMapping):
     """Chromosome object
     !!! ChrDict -> Chr !!!
     """
@@ -1951,80 +1724,13 @@ class Chr(BioMapping):
             keys.append(i['id'])
         return keys
 
-    def _dy__init__(self,es=[],perm_op=True):
-        # es: elements
-        # perm_op: permit elements overlap
-        self.start = float("inf")
-        self.end = - float("inf")
-        self._length = 0
-        self._count = 0
-        #self.extend(es)
-        # Whether to permit elements overlap
-        self.perm_op = perm_op
-
-        # Add single element
-        if type(es) != list:
-            es = [es]
-        self.add_es(es)
-
-    def add_exon(self,exon):
-        if exon.gene_id in self.keys():
-            self[exon.gene_id].add_exon(exon)
-        else:
-            self.add_e(GeneDict(TxDict([exon])))
-
-    def add_tx(self,tx):
-        if tx.gene_id in self.keys():
-            self[tx.gene_id].add_tx(tx)
-        else:
-            self.add_e(GeneDict([tx]))
-
-    def add_gene(self,gene):
-        self.add_e(tx)
-
-    def add_e(self,gene):
-        assert isinstance(gene,GeneDict)
-        self.ID = gene.Chr
-        #super(ChrDict,self).add_e(gene)
-        self.add_data(gene)
-        self.add_len(gene)
-
-    def sort(self):
-        self.sort(key=lambda x:x.start)
-
-    ##def __len__(self):
-    ##    return self.get_count()
-
-class Genome(BioMapping):
+class GffutilsGenome(BioMapping):
     """Genome object.
     
     The children can be chromosomes, schaffolds, or any other
     features previous defined in the annotation file.
 
     to-do: Rewrite SGENT.
-
-
-    doc of dypylib
-    Read gtf file, convert to GenomeDict data.
-        Only exon are used.
-
-        Example(Maybe correct):
-        genomedict = GtfDict(input_gtf_file)
-        # Get a geneDict object for gene named "EXMP"
-        dict_of_gene = genomedict.get_GeneDict()
-        gene = dict_of_gene.get("EXMP")
-        # Get information of the gene
-        print(gene.start)
-        print(gene.end)
-        print(gene.strand)
-        # Length of gene (sum of exon length), might be wrong, Fix in next version
-        print(len(gene))
-        # How many transcript in a gene
-        print(gene.count)
-
-        to-do: Rename this object as Genome,
-        and keep this object as alias of Genome
-
     """
 
     def _gffutils__getitem__(self, key):
@@ -2071,128 +1777,37 @@ class Genome(BioMapping):
         else:
             return self.convert_feature(self.db[key])
 
-    ###  dypylib
-    def _dy__init__(self,infile,sep="\t",keeps=set(["exon"]),fm="normal"):
-        """ fm[normal,gc,none]: format of gtf/gff file.
-                normal, in most situation, normal format are suitable.
-                gc, grass carp gtf V1.
-                none, don't parse geneID and txID.
-        """
-        super(GtfDict,self).__init__([])
-        self.loadfile(infile,sep,keeps,fm)
-
-    def loadfile(self,infile,sep,keeps,fm):
-        for rec in Gff(infile,sep=sep,fm=fm):
-            # filter type
-            #print(type(rec))
-            if (keeps != None) and (rec.type not in keeps):
-                continue
-            # Some illegle records without 
-            # gene_id or transcript_id attribution.
-            if (rec.gene_id is None or
-                rec.tx_id is None):
-                continue
-            self.add_exon(EXON(rec))
-
-    ###def __len__(self):
-    ###    return self.get_count()
-
-    def add_exon(self,exon):
-        if exon.Chr in self.keys():
-            self[exon.Chr].add_exon(exon)
+class GenomeFeature(ABC):
+    """Factory Class for Genomic Features"""
+    engines = {}
+    def __new__(cls, *args, engine='dypylib', **kwargs):
+        if engine in cls.engines:
+            myclass = cls.engines[engine](*args, engine=engine,\
+                                          **kwargs)
+            cls.register(cls.engines[engine])
+            return myclass
         else:
-            self.add_e(ChrDict(GeneDict(TxDict([exon]))))
+            raise TypeError("\"{}\" is not a valid engine.\
+                    Engines in {} is supported".format(engine,\
+                    ", ".join(cls.engines.keys())))
 
-    def add_e(self,gene):
-        assert isinstance(gene,ChrDict)
-        super(GtfDict,self).add_e(gene)
+class Genome(GenomeFeature):
+    engines = {'dypylib': GtfDict, 'gffutils': GffutilsGenome}
 
-    def add_gene(self,gene):
-        self.add_e(ChrDict(gene))
+class Chr(GenomeFeature):
+    engines = {'dypylib': ChrDict, 'gffutils': GffutilsChr}
 
-    def add_gene_rec(self,rec):
-        gene = GeneDict(rec=rec)
+class Gene(GenomeFeature):
+    engines = {'dypylib': ChrDict, 'gffutils': GffutilsGene}
 
-    def check_strand(self,e):
-        pass
+class Transcript(GenomeFeature):
+    engines = {'dypylib': ChrDict, 'gffutils': GffutilsTranscript}
 
-    def get_GeneDict(self):
-        """ Get a dict of gene_id - geneDict pair.
-            {gene_id:GeneDict}
-        """
-        data = Ordic()
-        for mychr in self.values():
-            for gene in mychr.values():
-                data[gene.ID] = gene
-        return data
+class Exon(GenomeFeature):
+    engines = {'dypylib': ChrDict, 'gffutils': GffutilsExon}
 
-    # Convert gffdict to {tx_id:tx_obj}
-    def get_TxDict(self):
-        """ Get a dict of tx_id - txDict pair.
-            {tx_id:TxDict}
-        """
-        data = Ordic()
-        for gene in self.get_GeneDict().values():
-            for tx in gene.values():
-                data[tx.ID] = tx
-        return data
-
-    def rename_gene_tx(self, gene_id, tx_id = None, get_id = False):
-        """ Rename the gene id with gene_id, transcript id with tx_id.
-            When tx_id is not provide, name it after gene_id.
-            example:
-                1.
-                gene_id = HBG
-                tx_id = None
-                xxxx ... transcript_id "HBG.1.1"; gene_id "HBG.1"
-                xxxx ... transcript_id "HBG.1.2"; gene_id "HBG.1"
-                xxxx ... transcript_id "HBG.2.1"; gene_id "HBG.2"
-                2.
-                gene_id = HBG
-                tx_id = HBT
-                xxxx ... transcript_id "HBT.1.1"; gene_id "HBG.1"
-                xxxx ... transcript_id "HBT.1.2"; gene_id "HBG.1"
-                xxxx ... transcript_id "HBT.2.1"; gene_id "HBG.2"
-            Return a tuple (A, B)
-            A is a dict, which is same as the return of get_GeneDict().
-            B is a list, records old/new id.
-            (old id, new id, "g"/"t") is the element of B, where "g" means gene id and "t" means transcript id.
-            If get_id set to False, only return A.
-        """
-        data = Ordic()
-        id_mapping = []
-        if tx_id == None:
-            tx_id = gene_id
-        # 1-based results
-        gene_count = 1
-        geneDict = self.get_GeneDict()
-        for ogid, txs in geneDict.items():
-            # gene suffix
-            gsf = "." + str(gene_count)
-            gid = gene_id + gsf
-            outgene = data.setdefault(gid,Ordic())
-            id_mapping.append((ogid,gid,"g"))
-            # 1-based results
-            tx_count = 1
-            for otid, exons in txs.items():
-                # transcript suffix
-                tsf = "." + str(tx_count)
-                tid = tx_id + gsf + tsf
-                outtx = outgene.setdefault(tid,Ordic())
-                id_mapping.append((otid,tid,"t"))
-                # 0-based exon-count
-                exon_count = 0
-                for exon in exons.values():
-                    exon.edit_gene_id(gid)
-                    exon.edit_tx_id(tid)
-                    outtx[exon_count] = exon
-                    exon_count += 1
-                tx_count += 1
-            gene_count += 1
-        if get_id:
-            return data, id_mapping
-        else:
-            return data
+class CDS(GenomeFeature):
+    engines = {'dypylib': ChrDict, 'gffutils': GffutilsCDS}
     
 def create_genome_using_gffutils(infile, dbfn = ':memory:'):
     """Create Genome object using gffutils
