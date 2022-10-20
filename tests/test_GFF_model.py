@@ -67,12 +67,6 @@ def test_search_method_of_Genome():
         mygenome.search(wrong_id)
 
 def test_GtfDict():
-    ###from bio.seq.Annotation import Test, Last_of_us,sub_test
-    #####b = Test('last_of_us','asdfw','fawew','werf')
-    #####print(isinstance(b, Test))
-    #####with pytest.raises(TypeError):
-    #####    l = Last_of_us()
-    #####sub_test()
     global mygenome, mychr, mygene
     mygenome = Genome(test_gtf, engine="dypylib")
     ##mychr = mygenome['CI01000023']
@@ -80,3 +74,15 @@ def test_GtfDict():
     ##test_on_genome_object()
     #test_on_chr_object()
     #test_on_Gene_object()
+
+def test_metaClass():
+    """Test for using metaclass.
+
+    """
+    from bio.seq.Annotation import Test, Last_of_us
+    b = Test('last_of_us','asdfw','fawew','werf')
+    assert isinstance(b, Test)
+    assert not isinstance(Last_of_us, Test)
+    with pytest.raises(TypeError):
+        l = Last_of_us()
+

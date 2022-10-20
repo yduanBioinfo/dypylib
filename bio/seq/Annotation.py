@@ -1490,6 +1490,7 @@ def open_file(infile):
 
 from _collections_abc import Mapping
 
+
 class newGENT(object):
     """ Genomic element.
     """
@@ -1545,12 +1546,17 @@ class newGENT(object):
         if self.start > self.end:
             self.start, self.end = self.end, self.start
 
+# The following four class is an example classes
+#   that prevent create object from destiny class (
+#   Last_of_us).
+#   In a nother way, the instance of Last_of_us
+#   must be create through the factory class (Test)
 class Test_main(type):
-    #def __new__():
-    #    pass
     def __call__(self, *args, **kwargs):
         if len(args) == 0 or args[0] != 'factory':
             raise TypeError("Can't instantiate directly")
+        else:
+            return super(Test_main, self).__call__(*args, **kwargs)
 
 class Last_of_us(metaclass=Test_main):
     def __init__(self, *args, **kwargs):
@@ -1566,14 +1572,13 @@ class Test(ABC):
     games = {'last_of_us': Last_of_us, 'uncharted': Uncharted}
     def __new__(cls, name, *args, **kwargs):
         if name in cls.games:
+            # Add 'factory' as the first parameter to 
+            #   indicate this class are created by Factory class.
             myclass = cls.games[name]('factory', *args, **kwargs)
             cls.register(cls.games[name])
             return myclass
         else:
             return PSGame()
-
-class sub_test(Test):
-    pass
 
 class BioMapping(Mapping, newGENT):
     """Mapping object for biology purpose.
@@ -1667,8 +1672,6 @@ class GffutilsExon(newGENT):
 
 class GffutilsTranscript(BioMapping):
     """Chromosome object
-    !!! to-do !!!
-    TxDict -> Transcript
     """
 
     def _gffutils__getitem__(self, key):
@@ -1686,7 +1689,6 @@ class GffutilsTranscript(BioMapping):
 
 class GffutilsGene(BioMapping):
     """Chromosome object
-    !!! GeneDict -> Gene !!!
     """
 
     def _gffutils__getitem__(self, key):
@@ -1705,7 +1707,6 @@ class GffutilsGene(BioMapping):
 
 class GffutilsChr(BioMapping):
     """Chromosome object
-    !!! ChrDict -> Chr !!!
     """
 
     def _gffutils__getitem__(self, key):
