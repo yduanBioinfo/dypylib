@@ -11,6 +11,7 @@ functions: write_fasta
 
 import sys, re, string, itertools, copy
 from abc import ABC
+from _collections_abc import Mapping
 import gffutils, sqlite3
 from collections import OrderedDict as Ordic
 try:
@@ -1298,7 +1299,7 @@ class GtfDict(SGENT):
         and keep this object as alias of Genome
 
     """
-    def __init__(self,infile,engine="dypylib",sep="\t",keeps=set(["exon"]),fm="normal"):
+    def __init__(self,infile,sep="\t",keeps=set(["exon"]),fm="normal", engine="dypylib"):
         """ fm[normal,gc,none]: format of gtf/gff file.
                 normal, in most situation, normal format are suitable.
                 gc, grass carp gtf V1.
@@ -1487,9 +1488,6 @@ def open_file(infile):
 #    def __init__(self, db = None, name = ""):
 #        self.db = db
 #        self.name = name
-
-from _collections_abc import Mapping
-
 
 
 # The following four class is an example classes
@@ -1780,10 +1778,11 @@ class GffutilsGenome(BioMapping):
 class GenomeFeature(ABC):
     """Factory Class for Genomic Features"""
     engines = {}
-    def __new__(cls, *args, engine='dypylib', **kwargs):
+    def __new__(cls, *args, **kwargs):
+        engine = "dypylib" if 'engine' not in kwargs\
+                 else kwargs['engine']
         if engine in cls.engines:
-            myclass = cls.engines[engine](*args, engine=engine,\
-                                          **kwargs)
+            myclass = cls.engines[engine](*args, **kwargs)
             myclass.init_from_factory = True
             cls.register(cls.engines[engine])
             return myclass
