@@ -1535,7 +1535,7 @@ class newGENT(object):
         """Should make a function to ensure self.db = self.db,
         self.engine = self.engine when create from newGENT
         """
-        self.engine = kwargs['engine']
+        self.engine = default_param(kwargs, 'engine', 'dypylib')
         if self.engine == 'gffutils':
             self._gffutils__init__(*args, **kwargs)
         elif self.engine == 'dypylib':
@@ -1779,8 +1779,7 @@ class GenomeFeature(ABC):
     """Factory Class for Genomic Features"""
     engines = {}
     def __new__(cls, *args, **kwargs):
-        engine = "dypylib" if 'engine' not in kwargs\
-                 else kwargs['engine']
+        engine = default_param(kwargs, 'engine', 'dypylib')
         if engine in cls.engines:
             myclass = cls.engines[engine](*args, **kwargs)
             myclass.init_from_factory = True
@@ -1846,7 +1845,8 @@ def test_genome_object(test_gtf):
         print(k)
         print(v)
 
-
+def default_param(kwargs, key, default):
+    return default if key not in kwargs else kwargs[key]
 
 if __name__ == '__main__':
 
