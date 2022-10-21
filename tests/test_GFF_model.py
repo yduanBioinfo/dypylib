@@ -65,6 +65,8 @@ def test_search_method_of_Genome():
     wrong_id = 'CIWT.814094'
     with pytest.raises(FeatureNotFoundError, match=wrong_id):
         mygenome.search(wrong_id)
+    from bio.seq.Annotation import GffutilsGenome
+    print(GffutilsGenome(mygenome.db, engine="gffutils"))
 
 def test_GtfDict():
     global mygenome, mychr, mygene
@@ -76,8 +78,7 @@ def test_GtfDict():
     #test_on_Gene_object()
 
 def test_metaClass():
-    """Test for using metaclass.
-
+    """Test for the examples using metaclass.
     """
     from bio.seq.Annotation import Test, Last_of_us
     b = Test('last_of_us','asdfw','fawew','werf')

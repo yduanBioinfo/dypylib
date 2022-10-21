@@ -1491,8 +1491,47 @@ def open_file(infile):
 from _collections_abc import Mapping
 
 
+
+# The following four class is an example classes
+#   that prevent create object from destiny class (
+#   Last_of_us).
+#   In a nother way, the instance of Last_of_us
+#   must be create through the factory class (Test)
+class Test_main(type):
+    def __call__(self, *args, **kwargs):
+        if len(args) == 0 or args[0] != 'factory':
+            raise TypeError("Can't instantiate directly")
+        else:
+            return super(Test_main, self).__call__(*args, **kwargs)
+
+class Last_of_us(metaclass=Test_main):
+    def __init__(self, *args, **kwargs):
+        print("init Last_of_us")
+        print(type(self))
+
+class Uncharted(object):
+    def __init__(self):
+        print("init Uncharted")
+        print(type(self))
+
+class Test(ABC):
+    games = {'last_of_us': Last_of_us, 'uncharted': Uncharted}
+    def __new__(cls, name, *args, **kwargs):
+        if name in cls.games:
+            # Add 'factory' as the first parameter to 
+            #   indicate this class are created by Factory class.
+            myclass = cls.games[name]('factory', *args, **kwargs)
+            cls.register(cls.games[name])
+            return myclass
+        else:
+            return PSGame()
+
 class newGENT(object):
     """ Genomic element.
+        To-do:
+        Try:
+        class newGENT(object, metaclass=Test_main):
+        TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
     """
     def __init__(self, *args, engine="dypylib", **kwargs):
         """Should make a function to ensure self.db = self.db,
@@ -1546,40 +1585,6 @@ class newGENT(object):
         if self.start > self.end:
             self.start, self.end = self.end, self.start
 
-# The following four class is an example classes
-#   that prevent create object from destiny class (
-#   Last_of_us).
-#   In a nother way, the instance of Last_of_us
-#   must be create through the factory class (Test)
-class Test_main(type):
-    def __call__(self, *args, **kwargs):
-        if len(args) == 0 or args[0] != 'factory':
-            raise TypeError("Can't instantiate directly")
-        else:
-            return super(Test_main, self).__call__(*args, **kwargs)
-
-class Last_of_us(metaclass=Test_main):
-    def __init__(self, *args, **kwargs):
-        print("init Last_of_us")
-        print(type(self))
-
-class Uncharted(object):
-    def __init__(self):
-        print("init Uncharted")
-        print(type(self))
-
-class Test(ABC):
-    games = {'last_of_us': Last_of_us, 'uncharted': Uncharted}
-    def __new__(cls, name, *args, **kwargs):
-        if name in cls.games:
-            # Add 'factory' as the first parameter to 
-            #   indicate this class are created by Factory class.
-            myclass = cls.games[name]('factory', *args, **kwargs)
-            cls.register(cls.games[name])
-            return myclass
-        else:
-            return PSGame()
-
 class BioMapping(Mapping, newGENT):
     """Mapping object for biology purpose.
     
@@ -1589,17 +1594,11 @@ class BioMapping(Mapping, newGENT):
 
         get_parents -> get_parents_id like get_children_id
     """
-    def __new__(self,*args,engine = "dypylib",**kwargs):
-        if engine == "dypylib":
-            return dict.__new__(self)
-        else:
-            return Mapping.__new__(self)
+    def __new__(self,*args,engine = "gffutils",**kwargs):
+        return Mapping.__new__(self)
 
-    def __init__(self, *args, engine="dypylib", **kwargs):
-        if engine == "dypylib":
-            self._dy__init__(*args, **kwargs)
-        else:
-            super(BioMapping, self).__init__(*args,engine=engine, **kwargs)
+    def __init__(self, *args, engine="gffutils", **kwargs):
+        super(BioMapping, self).__init__(*args,engine=engine, **kwargs)
 
     def __getitem__(self, key):
         if self.engine == 'gffutils':
