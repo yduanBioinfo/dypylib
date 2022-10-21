@@ -305,10 +305,79 @@ class Gff_rec(Seq):
         return [self.chr,self.source,self.type,self.start,self.end,\
             self.score,self.strand,self.phase,self.attr]
 
-# Genome element
 class GENT(object):
+    """ Genomic element.
+        To-do:
+        Try:
+        class newGENT(object, metaclass=Test_main):
+        TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
+    """
+    def __init__(self, *args, **kwargs):
+        """Should make a function to ensure self.db = self.db,
+        self.engine = self.engine when create from newGENT
+        """
+        #self.engine = default_param(kwargs, 'engine', 'dypylib')
+        self.engine = "dypylib" if 'engine' not in kwargs\
+                 else kwargs['engine']
+        #self.engine = kwargs['engine']
+        if self.engine == 'gffutils':
+            self._gffutils__init__(*args, **kwargs)
+        elif self.engine == 'dypylib':
+            ## ???
+            try: kwargs.pop('dypylib')
+            except: pass
+            self._dy__init__(*args, **kwargs)
 
-    def __init__(self,start,end,strand=".",attr={},engine="dypylib"):
+    def __len__(self):
+        """dy methods, Warning: gffutils might be affected.
+        """
+        return abs(self.end - self.start) + 1
+
+    def __getattr__(self, attr):
+        # Try to return attributs definded in database.
+        if self.engine == 'gffutils':
+            return self._gffutils__getattr__(attr)
+
+    def _gffutils__init__(self, db, *args, name = "",\
+            **kwargs):
+        self.db = db
+        self.name = name
+
+    def _gffutils__getattr__(self, attr):
+        # Try to return attributs definded in database.
+        return getattr(self.db[self.name], attr)
+
+    def _dy__init__(self,start,end,strand=".",attr={}):
+        self.engine = engine
+        self.start = int(start)
+        self.end = int(end)
+        # if start end has been adjusted, in which end >= start.
+        self.strand = strand
+        self._guess_strand()
+        self._adj_pos()
+        self.attr=attr
+
+    def _guess_strand(self):
+        """dy methods, Warning: gffutils might be affected.
+        """
+        if self.start > self.end:
+            if self.strand == "+":
+                raise ValueError("Stand is not suit for coordinates.\n")
+            self.strand = "-"
+
+    def _adj_pos(self):
+        """dy methods, Warning: gffutils might be affected.
+        """
+        if self.start > self.end:
+            self.start, self.end = self.end, self.start
+
+# Genome element
+class oldGENT(object):
+
+    def __init__(self, *args, **kwargs):
+        self._dy__init__(*args, **kwargs)
+
+    def _dy__init__(self,start,end,strand=".",attr={},engine="dypylib"):
         self.engine = engine
         self.start = int(start)
         self.end = int(end)
@@ -331,9 +400,9 @@ class GENT(object):
         if self.start > self.end:
             self.start, self.end = self.end, self.start
 
-class EXON(GENT):
+class EXON(oldGENT):
 
-    def __init__(self,*args,**kwargs):
+    def _dy__init__(self,*args,**kwargs):
         """ Bugs:
             When the attibution has been altered, the correponding value in self.rec keeps original.
             Need a update_rec function to solve this problem.
@@ -375,9 +444,9 @@ class EXON(GENT):
     def as_gtf(self):
         return self.as_str()
 
-class INTRON(GENT):
+class INTRON(oldGENT):
 
-    def __init__(self,start,end,strand,Chr,gene_id = None,tx_id = None):
+    def _dy__init__(self,start,end,strand,Chr,gene_id = None,tx_id = None):
         self.Chr = Chr
         self.chrom = Chr
         self.gene_id = gene_id
@@ -395,7 +464,7 @@ class INTRON(GENT):
         except:
             return False
 
-class SGENT(dict,GENT):
+class SGENT(dict,oldGENT):
     """Segments genome element
     like: transcripts, genes.
     When parse gff record, basic information like start, end, strand will be load first.
@@ -404,7 +473,7 @@ class SGENT(dict,GENT):
     def __new__(self,*args,**kwargs):
         return dict.__new__(self)
 
-    def __init__(self,es=[],perm_op=True,static=False,start=float("inf"),end=-float("inf"),strand=".",rec=None,engine="dypylib"):
+    def _dy__init__(self,es=[],perm_op=True,static=False,start=float("inf"),end=-float("inf"),strand=".",rec=None):
         # es: elements
         # perm_op: permit elements overlap
         # static: when static is True, start, end, strand, length option should not be update by add_exon.
@@ -560,7 +629,7 @@ class SGENT(dict,GENT):
 # transcript
 class TxDict(SGENT):
 
-    def __init__(self,*args,engine="dypylib",**kwargs):
+    def _dy__init__(self,*args,**kwargs):
         kwargs["perm_op"] = False
         super(TxDict,self).__init__(*args,**kwargs)
 
@@ -662,7 +731,7 @@ class GeneDict(SGENT):
 
 class ChrDict(SGENT):
 
-    def __init__(self,es=[],perm_op=True,engine="dypylib"):
+    def _dy__init__(self,es=[],perm_op=True):
         # es: elements
         # perm_op: permit elements overlap
         self.start = float("inf")
@@ -1299,13 +1368,13 @@ class GtfDict(SGENT):
         and keep this object as alias of Genome
 
     """
-    def __init__(self,infile,sep="\t",keeps=set(["exon"]),fm="normal", engine="dypylib"):
+    def _dy__init__(self,infile,sep="\t",keeps=set(["exon"]),fm="normal"):
         """ fm[normal,gc,none]: format of gtf/gff file.
                 normal, in most situation, normal format are suitable.
                 gc, grass carp gtf V1.
                 none, don't parse geneID and txID.
         """
-        super(GtfDict,self).__init__([])
+        super(GtfDict,self)._dy__init__([])
         self.loadfile(infile,sep,keeps,fm)
 
     def loadfile(self,infile,sep,keeps,fm):
@@ -1524,66 +1593,8 @@ class Test(ABC):
         else:
             return PSGame()
 
-class newGENT(object):
-    """ Genomic element.
-        To-do:
-        Try:
-        class newGENT(object, metaclass=Test_main):
-        TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
-    """
-    def __init__(self, *args, **kwargs):
-        """Should make a function to ensure self.db = self.db,
-        self.engine = self.engine when create from newGENT
-        """
-        self.engine = kwargs['engine']
-        if self.engine == 'gffutils':
-            self._gffutils__init__(*args, **kwargs)
-        elif self.engine == 'dypylib':
-            self._dy__init__(*args, **kwargs)
 
-    def __len__(self):
-        """dy methods, Warning: gffutils might be affected.
-        """
-        return abs(self.end - self.start) + 1
-
-    def __getattr__(self, attr):
-        # Try to return attributs definded in database.
-        if self.engine == 'gffutils':
-            return self._gffutils__getattr__(attr)
-
-    def _gffutils__init__(self, db, *args, name = "",\
-            **kwargs):
-        self.db = db
-        self.name = name
-
-    def _gffutils__getattr__(self, attr):
-        # Try to return attributs definded in database.
-        return getattr(self.db[self.name], attr)
-
-    def _dy__init__(self,start,end,strand=".",attr={}):
-        self.start = int(start)
-        self.end = int(end)
-        # if start end has been adjusted, in which end >= start.
-        self.strand = strand
-        self._guess_strand()
-        self._adj_pos()
-        self.attr=attr
-
-    def _guess_strand(self):
-        """dy methods, Warning: gffutils might be affected.
-        """
-        if self.start > self.end:
-            if self.strand == "+":
-                raise ValueError("Stand is not suit for coordinates.\n")
-            self.strand = "-"
-
-    def _adj_pos(self):
-        """dy methods, Warning: gffutils might be affected.
-        """
-        if self.start > self.end:
-            self.start, self.end = self.end, self.start
-
-class BioMapping(Mapping, newGENT):
+class BioMapping(Mapping, GENT):
     """Mapping object for biology purpose.
     
     Data are deposited in database.
@@ -1661,10 +1672,10 @@ class BioMapping(Mapping, newGENT):
             raise Keself.dbyError(info)
         return self.db[key]
 
-class GffutilsCDS(newGENT):
+class GffutilsCDS(GENT):
     pass
 
-class GffutilsExon(newGENT):
+class GffutilsExon(GENT):
     pass
 
 class GffutilsTranscript(BioMapping):
@@ -1682,7 +1693,7 @@ class GffutilsTranscript(BioMapping):
         elif feature.featuretype == 'cds':
             return CDS(self.db, name=feature.id, engine='gffutils')
         else:
-            return newGENT(self.db, name=feature.id, engine='gffutils')
+            return GENT(self.db, name=feature.id, engine='gffutils')
 
 class GffutilsGene(BioMapping):
     """Chromosome object
@@ -1781,7 +1792,14 @@ class GenomeFeature(ABC):
     def __new__(cls, *args, **kwargs):
         engine = "dypylib" if 'engine' not in kwargs\
                  else kwargs['engine']
+        #engine = default_param(kwargs, 'engine', 'dypylib')
         if engine in cls.engines:
+            print("cls:")
+            print(cls)
+            print("args:")
+            print(args)
+            print("kwargs:")
+            print(kwargs)
             myclass = cls.engines[engine](*args, **kwargs)
             myclass.init_from_factory = True
             cls.register(cls.engines[engine])
@@ -1846,7 +1864,8 @@ def test_genome_object(test_gtf):
         print(k)
         print(v)
 
-
+def default_param(kwargs, key, default):
+    return default if key not in kwargs else kwargs[key]
 
 if __name__ == '__main__':
 
