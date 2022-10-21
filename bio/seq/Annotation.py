@@ -382,7 +382,10 @@ class GffutilsGENT(GENT):
         if self.start > self.end:
             self.start, self.end = self.end, self.start
 
-class EXON(dyGENT):
+class EXON(object):
+    pass
+
+class dyEXON(dyGENT, EXON):
 
     def __init__(self,*args,**kwargs):
         """ Bugs:
@@ -401,7 +404,7 @@ class EXON(dyGENT):
         self.Chr = Chr
         self.gene_id = gene_id
         self.tx_id = tx_id
-        super(EXON,self).__init__(start,end,strand)
+        super(dyEXON,self).__init__(start,end,strand)
 
     def edit_gene_id(self,val):
         """ Alter gene_id
@@ -425,6 +428,9 @@ class EXON(dyGENT):
 
     def as_gtf(self):
         return self.as_str()
+
+class GffutilsExon(GffutilsGENT, EXON):
+    pass
 
 class INTRON(dyGENT):
 
@@ -1267,7 +1273,7 @@ class GffDict(GenomeDict):
                 rec.tx_id is None):
                 continue
             if rec.type == "exon":
-                self.add_exon(EXON(rec))
+                self.add_exon(dyEXON(rec))
             elif rec.type == "gene":
                 self.add_gene_rec(rec)
 
@@ -1327,13 +1333,13 @@ class GffDict(GenomeDict):
     def conv_gffdict2tx_level(self):
         return self.get_TxDict()
 
-class GtfDict(SGENT):
+class dyGenome(SGENT):
     
     """ Read gtf file, convert to GenomeDict data.
         Only exon are used.
 
         Example(Maybe correct):
-        genomedict = GtfDict(input_gtf_file)
+        genomedict = dyGenome(input_gtf_file)
         # Get a geneDict object for gene named "EXMP"
         dict_of_gene = genomedict.get_GeneDict()
         gene = dict_of_gene.get("EXMP")
@@ -1356,7 +1362,7 @@ class GtfDict(SGENT):
                 gc, grass carp gtf V1.
                 none, don't parse geneID and txID.
         """
-        super(GtfDict,self).__init__([])
+        super(dyGenome,self).__init__([])
         self.loadfile(infile,sep,keeps,fm)
 
     def loadfile(self,infile,sep,keeps,fm):
@@ -1383,7 +1389,7 @@ class GtfDict(SGENT):
 
     def add_e(self,gene):
         assert isinstance(gene,Chr)
-        super(GtfDict,self).add_e(gene)
+        super(dyGenome,self).add_e(gene)
 
     def add_gene(self,gene):
         self.add_e(Chr(gene))
@@ -1471,6 +1477,13 @@ class GtfDict(SGENT):
             return data, id_mapping
         else:
             return data
+
+class GtfDict(dyGenome):
+
+    def __init__(self, *args, **kwargs):
+        print("Warning, Please use Genome rather than GtfDict.\
+ The later one will retired soon.")
+        super(GtfDict, self).__init__(*args, **kwargs)
                     
 # Get direction of two element
 # "u" e1 locate in up (5')
@@ -1657,8 +1670,6 @@ class BioMapping(Mapping, GffutilsGENT):
 class GffutilsCDS(GffutilsGENT):
     pass
 
-class GffutilsExon(GffutilsGENT):
-    pass
 
 class GffutilsTranscript(BioMapping):
     """Chromosome object
@@ -1784,7 +1795,7 @@ class GenomeFeature(ABC):
                     ", ".join(cls.engines.keys())))
 
 class Genome(GenomeFeature):
-    engines = {'dypylib': GtfDict, 'gffutils': GffutilsGenome}
+    engines = {'dypylib': dyGenome, 'gffutils': GffutilsGenome}
 
 class Chr(GenomeFeature):
     engines = {'dypylib': ChrDict, 'gffutils': GffutilsChr}
@@ -1796,7 +1807,7 @@ class Transcript(GenomeFeature):
     engines = {'dypylib': TxDict, 'gffutils': GffutilsTranscript}
 
 class Exon(GenomeFeature):
-    engines = {'dypylib': EXON, 'gffutils': GffutilsExon}
+    engines = {'dypylib': dyEXON, 'gffutils': GffutilsExon}
 
 class CDS(GenomeFeature):
     engines = {'dypylib': GffutilsCDS, 'gffutils': GffutilsCDS}
