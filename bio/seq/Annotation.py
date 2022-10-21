@@ -307,7 +307,8 @@ class Gff_rec(Seq):
 # Genome element
 class GENT(object):
 
-    def __init__(self,start,end,strand=".",attr={}):
+    def __init__(self,start,end,strand=".",attr={},engine="dypylib"):
+        self.engine = engine
         self.start = int(start)
         self.end = int(end)
         # if start end has been adjusted, in which end >= start.
@@ -402,7 +403,7 @@ class SGENT(dict,GENT):
     def __new__(self,*args,**kwargs):
         return dict.__new__(self)
 
-    def __init__(self,es=[],perm_op=True,static=False,start=float("inf"),end=-float("inf"),strand=".",rec=None):
+    def __init__(self,es=[],perm_op=True,static=False,start=float("inf"),end=-float("inf"),strand=".",rec=None,engine="dypylib"):
         # es: elements
         # perm_op: permit elements overlap
         # static: when static is True, start, end, strand, length option should not be update by add_exon.
@@ -558,7 +559,7 @@ class SGENT(dict,GENT):
 # transcript
 class TxDict(SGENT):
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self,*args,engine="dypylib",**kwargs):
         kwargs["perm_op"] = False
         super(TxDict,self).__init__(*args,**kwargs)
 
@@ -566,7 +567,7 @@ class TxDict(SGENT):
         self.add_e(exon)
 
     def add_e(self,exon):
-        assert isinstance(exon,EXON)
+        assert isinstance(exon,Exon)
         self.ID = exon.tx_id
         self.Chr = exon.Chr
         self.gene_id = exon.gene_id
@@ -614,13 +615,13 @@ class GeneDict(SGENT):
             self[exon.tx_id].add_exon(exon)
             super(GeneDict,self)._update_info(exon)
         else:
-            self.add_e(TxDict([exon]))
+            self.add_e(Transcript([exon]))
 
     def add_tx(self,tx):
         self.add_e(tx)
 
     def add_e(self,tx):
-        assert isinstance(tx,TxDict)
+        assert isinstance(tx,Transcript)
         self.ID = tx.gene_id
         self.Chr = tx.Chr
         super(GeneDict,self).add_e(tx)
@@ -658,10 +659,9 @@ class GeneDict(SGENT):
                 max_len = len(tx)
         return rep_tx
 
-
 class ChrDict(SGENT):
 
-    def __init__(self,es=[],perm_op=True):
+    def __init__(self,es=[],perm_op=True,engine="dypylib"):
         # es: elements
         # perm_op: permit elements overlap
         self.start = float("inf")
@@ -681,19 +681,19 @@ class ChrDict(SGENT):
         if exon.gene_id in self.keys():
             self[exon.gene_id].add_exon(exon)
         else:
-            self.add_e(GeneDict(TxDict([exon])))
+            self.add_e(Gene(Transcript([exon])))
 
     def add_tx(self,tx):
         if tx.gene_id in self.keys():
             self[tx.gene_id].add_tx(tx)
         else:
-            self.add_e(GeneDict([tx]))
+            self.add_e(Gene([tx]))
 
     def add_gene(self,gene):
         self.add_e(tx)
 
     def add_e(self,gene):
-        assert isinstance(gene,GeneDict)
+        assert isinstance(gene,Gene)
         self.ID = gene.Chr
         #super(ChrDict,self).add_e(gene)
         self.add_data(gene)
@@ -712,17 +712,17 @@ class GenomeDict(SGENT):
         if exon.Chr in self.keys():
             self[exon.Chr].add_exon(exon)
         else:
-            self.add_e(ChrDict(GeneDict(TxDict([exon]))))
+            self.add_e(Chr(Gene(Transcript([exon]))))
 
     def add_e(self,gene):
-        assert isinstance(gene,ChrDict)
+        assert isinstance(gene,Chr)
         super(GenomeDict,self).add_e(gene)
 
     def add_gene(self,gene):
-        self.add_e(ChrDict(gene))
+        self.add_e(Chr(gene))
 
     def add_gene_rec(self,rec):
-        gene = GeneDict(rec=rec)
+        gene = Gene(rec=rec)
 
     def check_strand(self,e):
         pass
@@ -1318,7 +1318,7 @@ class GtfDict(SGENT):
             if (rec.gene_id is None or
                 rec.tx_id is None):
                 continue
-            self.add_exon(EXON(rec))
+            self.add_exon(Exon(rec))
 
     def __len__(self):
         return self.get_count()
@@ -1327,17 +1327,17 @@ class GtfDict(SGENT):
         if exon.Chr in self.keys():
             self[exon.Chr].add_exon(exon)
         else:
-            self.add_e(ChrDict(GeneDict(TxDict([exon]))))
+            self.add_e(Chr(Gene(Transcript([exon]))))
 
     def add_e(self,gene):
-        assert isinstance(gene,ChrDict)
+        assert isinstance(gene,Chr)
         super(GtfDict,self).add_e(gene)
 
     def add_gene(self,gene):
-        self.add_e(ChrDict(gene))
+        self.add_e(Chr(gene))
 
     def add_gene_rec(self,rec):
-        gene = GeneDict(rec=rec)
+        gene = Gene(rec=rec)
 
     def check_strand(self,e):
         pass
@@ -1533,13 +1533,14 @@ class newGENT(object):
         class newGENT(object, metaclass=Test_main):
         TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
     """
-    def __init__(self, *args, engine="dypylib", **kwargs):
+    def __init__(self, *args, **kwargs):
         """Should make a function to ensure self.db = self.db,
         self.engine = self.engine when create from newGENT
         """
-        if engine == 'gffutils':
+        self.engine = kwargs['engine']
+        if self.engine == 'gffutils':
             self._gffutils__init__(*args, **kwargs)
-        elif engine == 'dypylib':
+        elif self.engine == 'dypylib':
             self._dy__init__(*args, **kwargs)
 
     def __len__(self):
@@ -1554,7 +1555,6 @@ class newGENT(object):
 
     def _gffutils__init__(self, db, *args, name = "",\
             **kwargs):
-        self.engine = 'gffutils'
         self.db = db
         self.name = name
 
@@ -1784,6 +1784,7 @@ class GenomeFeature(ABC):
         if engine in cls.engines:
             myclass = cls.engines[engine](*args, engine=engine,\
                                           **kwargs)
+            myclass.init_from_factory = True
             cls.register(cls.engines[engine])
             return myclass
         else:
@@ -1798,16 +1799,16 @@ class Chr(GenomeFeature):
     engines = {'dypylib': ChrDict, 'gffutils': GffutilsChr}
 
 class Gene(GenomeFeature):
-    engines = {'dypylib': ChrDict, 'gffutils': GffutilsGene}
+    engines = {'dypylib': GeneDict, 'gffutils': GffutilsGene}
 
 class Transcript(GenomeFeature):
-    engines = {'dypylib': ChrDict, 'gffutils': GffutilsTranscript}
+    engines = {'dypylib': TxDict, 'gffutils': GffutilsTranscript}
 
 class Exon(GenomeFeature):
-    engines = {'dypylib': ChrDict, 'gffutils': GffutilsExon}
+    engines = {'dypylib': EXON, 'gffutils': GffutilsExon}
 
 class CDS(GenomeFeature):
-    engines = {'dypylib': ChrDict, 'gffutils': GffutilsCDS}
+    engines = {'dypylib': GffutilsCDS, 'gffutils': GffutilsCDS}
     
 def create_genome_using_gffutils(infile, dbfn = ':memory:'):
     """Create Genome object using gffutils

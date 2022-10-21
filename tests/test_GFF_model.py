@@ -71,9 +71,9 @@ def test_search_method_of_Genome():
 def test_GtfDict():
     global mygenome, mychr, mygene
     mygenome = Genome(test_gtf, engine="dypylib")
-    ##mychr = mygenome['CI01000023']
-    ##mygene = mychr['CIWT.8140']
-    ##test_on_genome_object()
+    mychr = mygenome['CI01000023']
+    mygene = mychr['CIWT.8140']
+    test_on_genome_object()
     #test_on_chr_object()
     #test_on_Gene_object()
 
