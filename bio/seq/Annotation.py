@@ -469,7 +469,7 @@ class dyIntron(dyGENT, BaseIntron):
 class GffutilsIntron(GffutilsGENT, BaseIntron):
     pass
 
-class SGENT(dict,dyGENT):
+class dySGENT(dict,dyGENT):
     """Segments genome element
     like: transcripts, genes.
     When parse gff record, basic information like start, end, strand will be load first.
@@ -710,7 +710,7 @@ class BaseTranscript(object):
     """Base class of Transcript"""
 
 # transcript
-class TxDict(SGENT, BaseTranscript):
+class TxDict(dySGENT, BaseTranscript):
 
     def __init__(self,*args,engine="dypylib",**kwargs):
         kwargs["perm_op"] = False
@@ -777,7 +777,7 @@ class GffutilsTranscript(GffutilsSGENT, BaseTranscript):
         else:
             return GffutilsGENT(self.db, name=feature.id, engine='gffutils')
 
-class GeneDict(SGENT):
+class GeneDict(dySGENT):
 
     def add_exon(self,exon):
         if exon.tx_id in self.keys():
@@ -829,7 +829,7 @@ class GeneDict(SGENT):
                 max_len = len(tx)
         return rep_tx
 
-class ChrDict(SGENT):
+class ChrDict(dySGENT):
 
     def __init__(self,es=[],perm_op=True,engine="dypylib"):
         # es: elements
@@ -875,7 +875,7 @@ class ChrDict(SGENT):
     def __len__(self):
         return self.get_count()
 
-class GenomeDict(SGENT):
+class GenomeDict(dySGENT):
     """to-do: Remove this object"""
 
     def add_exon(self,exon):
@@ -1445,7 +1445,7 @@ class GffDict(GenomeDict):
     def conv_gffdict2tx_level(self):
         return self.get_TxDict()
 
-class dyGenome(SGENT):
+class dyGenome(dySGENT):
     
     """ Read gtf file, convert to GenomeDict data.
         Only exon are used.
