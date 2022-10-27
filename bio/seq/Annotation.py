@@ -382,10 +382,10 @@ class GffutilsGENT(GENT):
         if self.start > self.end:
             self.start, self.end = self.end, self.start
 
-class BaseEXON(object):
-    """Base class of EXON"""
+class BaseExon(object):
+    """Base class of Exon"""
 
-class dyEXON(dyGENT, BaseEXON):
+class dyExon(dyGENT, BaseExon):
 
     def __init__(self,*args,**kwargs):
         """ Bugs:
@@ -404,7 +404,7 @@ class dyEXON(dyGENT, BaseEXON):
         self.Chr = Chr
         self.gene_id = gene_id
         self.tx_id = tx_id
-        super(dyEXON,self).__init__(start,end,strand)
+        super(dyExon,self).__init__(start,end,strand)
 
     def edit_gene_id(self,val):
         """ Alter gene_id
@@ -429,7 +429,7 @@ class dyEXON(dyGENT, BaseEXON):
     def as_gtf(self):
         return self.as_str()
 
-class GffutilsEXON(GffutilsGENT, BaseEXON):
+class GffutilsExon(GffutilsGENT, BaseExon):
     pass
 
 class BaseCDS(object):
@@ -642,7 +642,7 @@ class TxDict(SGENT):
         self.add_e(exon)
 
     def add_e(self,exon):
-        assert isinstance(exon,EXON)
+        assert isinstance(exon,Exon)
         self.ID = exon.tx_id
         self.Chr = exon.Chr
         self.gene_id = exon.gene_id
@@ -1290,7 +1290,7 @@ class GffDict(GenomeDict):
                 rec.tx_id is None):
                 continue
             if rec.type == "exon":
-                self.add_exon(dyEXON(rec))
+                self.add_exon(dyExon(rec))
             elif rec.type == "gene":
                 self.add_gene_rec(rec)
 
@@ -1393,7 +1393,7 @@ class dyGenome(SGENT):
             if (rec.gene_id is None or
                 rec.tx_id is None):
                 continue
-            self.add_exon(EXON(rec))
+            self.add_exon(Exon(rec))
 
     def __len__(self):
         return self.get_count()
@@ -1697,7 +1697,7 @@ class GffutilsTranscript(BioMapping):
             raise KeyError(info)
         feature = self.db[key]
         if feature.featuretype == 'exon':
-            return EXON(self.db, name=feature.id, engine='gffutils')
+            return Exon(self.db, name=feature.id, engine='gffutils')
         elif feature.featuretype == 'cds':
             return CDS(self.db, name=feature.id, engine='gffutils')
         else:
@@ -1774,7 +1774,7 @@ class GffutilsGenome(BioMapping):
         elif feature.featuretype == 'transcript':
             return Transcript(self.db, name = feature.id, engine='gffutils')
         elif feature.featuretype == 'exon':
-            return EXON(self.db, name = feature.id, engine='gffutils')
+            return Exon(self.db, name = feature.id, engine='gffutils')
         elif feature.featuretype == 'cds':
             return CDS(self.db, name = feature.id, engine='gffutils')
         else:
@@ -1821,8 +1821,8 @@ class Gene(GenomeFeature):
 class Transcript(GenomeFeature):
     engines = {'dypylib': TxDict, 'gffutils': GffutilsTranscript}
 
-class EXON(GenomeFeature):
-    engines = {'dypylib': dyEXON, 'gffutils': GffutilsEXON}
+class Exon(GenomeFeature):
+    engines = {'dypylib': dyExon, 'gffutils': GffutilsExon}
 
 class CDS(GenomeFeature):
     engines = {'dypylib': dyCDS, 'gffutils': GffutilsCDS}
