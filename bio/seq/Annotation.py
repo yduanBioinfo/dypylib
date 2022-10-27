@@ -432,10 +432,13 @@ class dyEXON(dyGENT, BaseEXON):
 class GffutilsEXON(GffutilsGENT, BaseEXON):
     pass
 
-class dyCDS(dyGENT):
+class BaseCDS(object):
+    """Base class of CDS"""
+
+class dyCDS(dyGENT, BaseCDS):
     pass
 
-class GffutilsCDS(GffutilsGENT):
+class GffutilsCDS(GffutilsGENT, BaseCDS):
     pass
 
 class INTRON(dyGENT):
