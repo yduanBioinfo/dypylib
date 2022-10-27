@@ -923,7 +923,11 @@ class GffutilsChr(GffutilsSGENT, BaseChromosome):
             keys.append(i['id'])
         return keys
 
-class GenomeDict(dySGENT):
+class BaseGenome(object):
+    """Base class of BaseGenome"""
+    pass
+
+class GenomeDict(dySGENT, BaseGenome):
     """to-do: Remove this object"""
 
     def add_exon(self,exon):
@@ -947,6 +951,204 @@ class GenomeDict(dySGENT):
 
     def __len__(self):
         return self.get_count()
+
+class dyGenome(dySGENT, BaseGenome):
+    
+    """ Read gtf file, convert to GenomeDict data.
+        Only exon are used.
+
+        Example(Maybe correct):
+        genomedict = dyGenome(input_gtf_file)
+        # Get a geneDict object for gene named "EXMP"
+        dict_of_gene = genomedict.get_GeneDict()
+        gene = dict_of_gene.get("EXMP")
+        # Get information of the gene
+        print(gene.start)
+        print(gene.end)
+        print(gene.strand)
+        # Length of gene (sum of exon length), might be wrong, Fix in next version
+        print(len(gene))
+        # How many transcript in a gene
+        print(gene.count)
+
+        to-do: Rename this object as Genome,
+        and keep this object as alias of Genome
+
+    """
+    def __init__(self,infile,sep="\t",keeps=set(["exon"]),fm="normal", engine="dypylib"):
+        """ fm[normal,gc,none]: format of gtf/gff file.
+                normal, in most situation, normal format are suitable.
+                gc, grass carp gtf V1.
+                none, don't parse geneID and txID.
+        """
+        super(dyGenome,self).__init__([])
+        self.loadfile(infile,sep,keeps,fm)
+
+    def loadfile(self,infile,sep,keeps,fm):
+        for rec in Gff(infile,sep=sep,fm=fm):
+            # filter type
+            #print(type(rec))
+            if (keeps != None) and (rec.type not in keeps):
+                continue
+            # Some illegle records without 
+            # gene_id or transcript_id attribution.
+            if (rec.gene_id is None or
+                rec.tx_id is None):
+                continue
+            self.add_exon(Exon(rec))
+
+    def __len__(self):
+        return self.get_count()
+
+    def add_exon(self,exon):
+        if exon.Chr in self.keys():
+            self[exon.Chr].add_exon(exon)
+        else:
+            self.add_e(Chr(Gene(Transcript([exon]))))
+
+    def add_e(self,gene):
+        assert isinstance(gene,Chr)
+        super(dyGenome,self).add_e(gene)
+
+    def add_gene(self,gene):
+        self.add_e(Chr(gene))
+
+    def add_gene_rec(self,rec):
+        gene = Gene(rec=rec)
+
+    def check_strand(self,e):
+        pass
+
+    def get_GeneDict(self):
+        """ Get a dict of gene_id - geneDict pair.
+            {gene_id:GeneDict}
+        """
+        data = Ordic()
+        for mychr in self.values():
+            for gene in mychr.values():
+                data[gene.ID] = gene
+        return data
+
+    # Convert gffdict to {tx_id:tx_obj}
+    def get_TxDict(self):
+        """ Get a dict of tx_id - txDict pair.
+            {tx_id:TxDict}
+        """
+        data = Ordic()
+        for gene in self.get_GeneDict().values():
+            for tx in gene.values():
+                data[tx.ID] = tx
+        return data
+
+    def rename_gene_tx(self, gene_id, tx_id = None, get_id = False):
+        """ Rename the gene id with gene_id, transcript id with tx_id.
+            When tx_id is not provide, name it after gene_id.
+            example:
+                1.
+                gene_id = HBG
+                tx_id = None
+                xxxx ... transcript_id "HBG.1.1"; gene_id "HBG.1"
+                xxxx ... transcript_id "HBG.1.2"; gene_id "HBG.1"
+                xxxx ... transcript_id "HBG.2.1"; gene_id "HBG.2"
+                2.
+                gene_id = HBG
+                tx_id = HBT
+                xxxx ... transcript_id "HBT.1.1"; gene_id "HBG.1"
+                xxxx ... transcript_id "HBT.1.2"; gene_id "HBG.1"
+                xxxx ... transcript_id "HBT.2.1"; gene_id "HBG.2"
+            Return a tuple (A, B)
+            A is a dict, which is same as the return of get_GeneDict().
+            B is a list, records old/new id.
+            (old id, new id, "g"/"t") is the element of B, where "g" means gene id and "t" means transcript id.
+            If get_id set to False, only return A.
+        """
+        data = Ordic()
+        id_mapping = []
+        if tx_id == None:
+            tx_id = gene_id
+        # 1-based results
+        gene_count = 1
+        geneDict = self.get_GeneDict()
+        for ogid, txs in geneDict.items():
+            # gene suffix
+            gsf = "." + str(gene_count)
+            gid = gene_id + gsf
+            outgene = data.setdefault(gid,Ordic())
+            id_mapping.append((ogid,gid,"g"))
+            # 1-based results
+            tx_count = 1
+            for otid, exons in txs.items():
+                # transcript suffix
+                tsf = "." + str(tx_count)
+                tid = tx_id + gsf + tsf
+                outtx = outgene.setdefault(tid,Ordic())
+                id_mapping.append((otid,tid,"t"))
+                # 0-based exon-count
+                exon_count = 0
+                for exon in exons.values():
+                    exon.edit_gene_id(gid)
+                    exon.edit_tx_id(tid)
+                    outtx[exon_count] = exon
+                    exon_count += 1
+                tx_count += 1
+            gene_count += 1
+        if get_id:
+            return data, id_mapping
+        else:
+            return data
+
+class GffutilsGenome(GffutilsSGENT, BaseGenome):
+    """Genome object.
+    
+    The children can be chromosomes, schaffolds, or any other
+    features previous defined in the annotation file.
+
+    to-do: Rewrite SGENT.
+    """
+
+    def _gffutils__getitem__(self, key):
+        if key not in self:
+            info = "{} is not contained in {}, please check it.\
+                    ".format(key, self.name)
+            raise KeyError(info)
+        return Chr(self.db, name=key, engine='gffutils')
+
+    def _gffutils_get_children_id(self):
+        keys = []
+        c = self.db.execute("select DISTINCT seqid from features")
+        for i in c.fetchall():
+            keys.append(i['seqid'])
+        return keys
+
+    def convert_feature(self, feature):
+        return self._gffutils_convert_feature(feature)
+
+    def _gffutils_convert_feature(self, feature):
+        """Convert gffutil object to dypylib object"""
+        if feature.featuretype == 'gene':
+            return Gene(self.db, name = feature.id, engine='gffutils')
+        elif feature.featuretype == 'transcript':
+            return Transcript(self.db, name = feature.id, engine='gffutils')
+        elif feature.featuretype == 'exon':
+            return Exon(self.db, name = feature.id, engine='gffutils')
+        elif feature.featuretype == 'cds':
+            return CDS(self.db, name = feature.id, engine='gffutils')
+        else:
+            return feature
+
+    def search(self, key):
+        return self._gffutils_search(key)
+    
+    def _gffutils_search(self, key):
+        """Search by feature id.
+        Except for chromosome, all other ids like gene/transcript id
+            are stored at database.
+        """
+        # Return a chromsome
+        if key in self:
+            return self[key]
+        else:
+            return self.convert_feature(self.db[key])
 
 class GTF(object):
 
@@ -1493,151 +1695,6 @@ class GffDict(GenomeDict):
     def conv_gffdict2tx_level(self):
         return self.get_TxDict()
 
-class dyGenome(dySGENT):
-    
-    """ Read gtf file, convert to GenomeDict data.
-        Only exon are used.
-
-        Example(Maybe correct):
-        genomedict = dyGenome(input_gtf_file)
-        # Get a geneDict object for gene named "EXMP"
-        dict_of_gene = genomedict.get_GeneDict()
-        gene = dict_of_gene.get("EXMP")
-        # Get information of the gene
-        print(gene.start)
-        print(gene.end)
-        print(gene.strand)
-        # Length of gene (sum of exon length), might be wrong, Fix in next version
-        print(len(gene))
-        # How many transcript in a gene
-        print(gene.count)
-
-        to-do: Rename this object as Genome,
-        and keep this object as alias of Genome
-
-    """
-    def __init__(self,infile,sep="\t",keeps=set(["exon"]),fm="normal", engine="dypylib"):
-        """ fm[normal,gc,none]: format of gtf/gff file.
-                normal, in most situation, normal format are suitable.
-                gc, grass carp gtf V1.
-                none, don't parse geneID and txID.
-        """
-        super(dyGenome,self).__init__([])
-        self.loadfile(infile,sep,keeps,fm)
-
-    def loadfile(self,infile,sep,keeps,fm):
-        for rec in Gff(infile,sep=sep,fm=fm):
-            # filter type
-            #print(type(rec))
-            if (keeps != None) and (rec.type not in keeps):
-                continue
-            # Some illegle records without 
-            # gene_id or transcript_id attribution.
-            if (rec.gene_id is None or
-                rec.tx_id is None):
-                continue
-            self.add_exon(Exon(rec))
-
-    def __len__(self):
-        return self.get_count()
-
-    def add_exon(self,exon):
-        if exon.Chr in self.keys():
-            self[exon.Chr].add_exon(exon)
-        else:
-            self.add_e(Chr(Gene(Transcript([exon]))))
-
-    def add_e(self,gene):
-        assert isinstance(gene,Chr)
-        super(dyGenome,self).add_e(gene)
-
-    def add_gene(self,gene):
-        self.add_e(Chr(gene))
-
-    def add_gene_rec(self,rec):
-        gene = Gene(rec=rec)
-
-    def check_strand(self,e):
-        pass
-
-    def get_GeneDict(self):
-        """ Get a dict of gene_id - geneDict pair.
-            {gene_id:GeneDict}
-        """
-        data = Ordic()
-        for mychr in self.values():
-            for gene in mychr.values():
-                data[gene.ID] = gene
-        return data
-
-    # Convert gffdict to {tx_id:tx_obj}
-    def get_TxDict(self):
-        """ Get a dict of tx_id - txDict pair.
-            {tx_id:TxDict}
-        """
-        data = Ordic()
-        for gene in self.get_GeneDict().values():
-            for tx in gene.values():
-                data[tx.ID] = tx
-        return data
-
-    def rename_gene_tx(self, gene_id, tx_id = None, get_id = False):
-        """ Rename the gene id with gene_id, transcript id with tx_id.
-            When tx_id is not provide, name it after gene_id.
-            example:
-                1.
-                gene_id = HBG
-                tx_id = None
-                xxxx ... transcript_id "HBG.1.1"; gene_id "HBG.1"
-                xxxx ... transcript_id "HBG.1.2"; gene_id "HBG.1"
-                xxxx ... transcript_id "HBG.2.1"; gene_id "HBG.2"
-                2.
-                gene_id = HBG
-                tx_id = HBT
-                xxxx ... transcript_id "HBT.1.1"; gene_id "HBG.1"
-                xxxx ... transcript_id "HBT.1.2"; gene_id "HBG.1"
-                xxxx ... transcript_id "HBT.2.1"; gene_id "HBG.2"
-            Return a tuple (A, B)
-            A is a dict, which is same as the return of get_GeneDict().
-            B is a list, records old/new id.
-            (old id, new id, "g"/"t") is the element of B, where "g" means gene id and "t" means transcript id.
-            If get_id set to False, only return A.
-        """
-        data = Ordic()
-        id_mapping = []
-        if tx_id == None:
-            tx_id = gene_id
-        # 1-based results
-        gene_count = 1
-        geneDict = self.get_GeneDict()
-        for ogid, txs in geneDict.items():
-            # gene suffix
-            gsf = "." + str(gene_count)
-            gid = gene_id + gsf
-            outgene = data.setdefault(gid,Ordic())
-            id_mapping.append((ogid,gid,"g"))
-            # 1-based results
-            tx_count = 1
-            for otid, exons in txs.items():
-                # transcript suffix
-                tsf = "." + str(tx_count)
-                tid = tx_id + gsf + tsf
-                outtx = outgene.setdefault(tid,Ordic())
-                id_mapping.append((otid,tid,"t"))
-                # 0-based exon-count
-                exon_count = 0
-                for exon in exons.values():
-                    exon.edit_gene_id(gid)
-                    exon.edit_tx_id(tid)
-                    outtx[exon_count] = exon
-                    exon_count += 1
-                tx_count += 1
-            gene_count += 1
-        if get_id:
-            return data, id_mapping
-        else:
-            return data
-
 class GtfDict(dyGenome):
 
     def __init__(self, *args, **kwargs):
@@ -1747,61 +1804,6 @@ class Test(ABC):
             return myclass
         else:
             return PSGame()
-
-
-
-class GffutilsGenome(GffutilsSGENT):
-    """Genome object.
-    
-    The children can be chromosomes, schaffolds, or any other
-    features previous defined in the annotation file.
-
-    to-do: Rewrite SGENT.
-    """
-
-    def _gffutils__getitem__(self, key):
-        if key not in self:
-            info = "{} is not contained in {}, please check it.\
-                    ".format(key, self.name)
-            raise KeyError(info)
-        return Chr(self.db, name=key, engine='gffutils')
-
-    def _gffutils_get_children_id(self):
-        keys = []
-        c = self.db.execute("select DISTINCT seqid from features")
-        for i in c.fetchall():
-            keys.append(i['seqid'])
-        return keys
-
-    def convert_feature(self, feature):
-        return self._gffutils_convert_feature(feature)
-
-    def _gffutils_convert_feature(self, feature):
-        """Convert gffutil object to dypylib object"""
-        if feature.featuretype == 'gene':
-            return Gene(self.db, name = feature.id, engine='gffutils')
-        elif feature.featuretype == 'transcript':
-            return Transcript(self.db, name = feature.id, engine='gffutils')
-        elif feature.featuretype == 'exon':
-            return Exon(self.db, name = feature.id, engine='gffutils')
-        elif feature.featuretype == 'cds':
-            return CDS(self.db, name = feature.id, engine='gffutils')
-        else:
-            return feature
-
-    def search(self, key):
-        return self._gffutils_search(key)
-    
-    def _gffutils_search(self, key):
-        """Search by feature id.
-        Except for chromosome, all other ids like gene/transcript id
-            are stored at database.
-        """
-        # Return a chromsome
-        if key in self:
-            return self[key]
-        else:
-            return self.convert_feature(self.db[key])
 
 class GenomeFeature(ABC):
     """Factory Class for Genomic Features"""
