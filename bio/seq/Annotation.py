@@ -631,8 +631,89 @@ class SGENT(dict,dyGENT):
     def get_sorted_values(self,key = lambda x: x.start):
         return sorted(self.values(),key = key)
 
+class BioMapping(Mapping, GffutilsGENT):
+    """Mapping object for biology purpose.
+    
+    Data are deposited in database.
+    to-do: Make this object a database version of GENT,
+        or make a new GENT class (mGENT)which is child of BioMapping.
+
+        get_parents -> get_parents_id like get_children_id
+    """
+    def __new__(self,*args,engine = "gffutils",**kwargs):
+        return Mapping.__new__(self)
+
+    def __init__(self, *args, engine="gffutils", **kwargs):
+        super(BioMapping, self).__init__(*args,engine=engine, **kwargs)
+
+    def __getitem__(self, key):
+        if self.engine == 'gffutils':
+            return self._gffutils__getitem__(key)
+
+    def __contains__(self, key):
+        return key in self.children_id
+
+    def _gffutils__getattr__(self, attr):
+        """Don't init children and parents in __int__,
+        rather find it from datbase when is needed.
+
+        This option can avoid loading every relation in
+            python once construct an object.
+        """
+        if attr == 'children':
+            self.children = self.get_children()
+            return self.children
+        elif attr == 'parents':
+            self.children = self.get_parents()
+            return self.children
+        elif attr == 'children_id':
+            self.children_id = self.get_children_id()
+            return self.children_id
+        else:
+            return getattr(self.db[self.name], attr)
+
+    def __iter__(self):
+        """Self.keys() are generated here."""
+        keys = self.children_id
+        return iter(keys)
+
+    def __len__(self):
+        return len(self.children_id)
+
+    def get_children_id(self):
+        if self.engine == 'gffutils':
+            return self._gffutils_get_children_id()
+        else:
+            raise TypeError("Only gffutils have get_children_id function")
+
+    def _gffutils_get_children_id(self):
+        children = self.db.children(self.name)
+        return [i.id for i in children]
+
+    def get_children(self):
+        return self._gffutils_get_children()
+
+    def _gffutils_get_children(self):
+        return self.db.children(self.name)
+
+    def get_parents(self):
+        return self._gffutils_get_parents()
+
+    def _gffutils_get_parents(self):
+        return self.db.parents(self.name)
+
+    def _gffutils__getitem__(self, key):
+        if key not in self:
+            info = "{} is not contained in {}, please check it.\
+                    ".format(key, self.name)
+            raise Keself.dbyError(info)
+        return self.db[key]
+
+class BaseTranscript(object):
+    """Base class of Transcript"""
+
 # transcript
-class TxDict(SGENT):
+class TxDict(SGENT, BaseTranscript):
 
     def __init__(self,*args,engine="dypylib",**kwargs):
         kwargs["perm_op"] = False
@@ -681,6 +762,23 @@ class TxDict(SGENT):
                 raise ValueError("The end of the intron must be bigger than the start")
             res.append(Intron(_start,_end,e_0.strand,e_0.Chr,e_0.gene_id,e_0.tx_id))
         return res
+
+class GffutilsTranscript(BioMapping, BaseTranscript):
+    """Chromosome object
+    """
+
+    def _gffutils__getitem__(self, key):
+        if key not in self:
+            info = "{} is not contained in {}, please check it.\
+                    ".format(key, self.name)
+            raise KeyError(info)
+        feature = self.db[key]
+        if feature.featuretype == 'exon':
+            return Exon(self.db, name=feature.id, engine='gffutils')
+        elif feature.featuretype == 'cds':
+            return CDS(self.db, name=feature.id, engine='gffutils')
+        else:
+            return GffutilsGENT(self.db, name=feature.id, engine='gffutils')
 
 class GeneDict(SGENT):
 
@@ -1606,102 +1704,7 @@ class Test(ABC):
             return PSGame()
 
 
-class BioMapping(Mapping, GffutilsGENT):
-    """Mapping object for biology purpose.
-    
-    Data are deposited in database.
-    to-do: Make this object a database version of GENT,
-        or make a new GENT class (mGENT)which is child of BioMapping.
 
-        get_parents -> get_parents_id like get_children_id
-    """
-    def __new__(self,*args,engine = "gffutils",**kwargs):
-        return Mapping.__new__(self)
-
-    def __init__(self, *args, engine="gffutils", **kwargs):
-        super(BioMapping, self).__init__(*args,engine=engine, **kwargs)
-
-    def __getitem__(self, key):
-        if self.engine == 'gffutils':
-            return self._gffutils__getitem__(key)
-
-    def __contains__(self, key):
-        return key in self.children_id
-
-    def _gffutils__getattr__(self, attr):
-        """Don't init children and parents in __int__,
-        rather find it from datbase when is needed.
-
-        This option can avoid loading every relation in
-            python once construct an object.
-        """
-        if attr == 'children':
-            self.children = self.get_children()
-            return self.children
-        elif attr == 'parents':
-            self.children = self.get_parents()
-            return self.children
-        elif attr == 'children_id':
-            self.children_id = self.get_children_id()
-            return self.children_id
-        else:
-            return getattr(self.db[self.name], attr)
-
-    def __iter__(self):
-        """Self.keys() are generated here."""
-        keys = self.children_id
-        return iter(keys)
-
-    def __len__(self):
-        return len(self.children_id)
-
-    def get_children_id(self):
-        if self.engine == 'gffutils':
-            return self._gffutils_get_children_id()
-        else:
-            raise TypeError("Only gffutils have get_children_id function")
-
-    def _gffutils_get_children_id(self):
-        children = self.db.children(self.name)
-        return [i.id for i in children]
-
-    def get_children(self):
-        return self._gffutils_get_children()
-
-    def _gffutils_get_children(self):
-        return self.db.children(self.name)
-
-    def get_parents(self):
-        return self._gffutils_get_parents()
-
-    def _gffutils_get_parents(self):
-        return self.db.parents(self.name)
-
-    def _gffutils__getitem__(self, key):
-        if key not in self:
-            info = "{} is not contained in {}, please check it.\
-                    ".format(key, self.name)
-            raise Keself.dbyError(info)
-        return self.db[key]
-
-
-
-class GffutilsTranscript(BioMapping):
-    """Chromosome object
-    """
-
-    def _gffutils__getitem__(self, key):
-        if key not in self:
-            info = "{} is not contained in {}, please check it.\
-                    ".format(key, self.name)
-            raise KeyError(info)
-        feature = self.db[key]
-        if feature.featuretype == 'exon':
-            return Exon(self.db, name=feature.id, engine='gffutils')
-        elif feature.featuretype == 'cds':
-            return CDS(self.db, name=feature.id, engine='gffutils')
-        else:
-            return GffutilsGENT(self.db, name=feature.id, engine='gffutils')
 
 class GffutilsGene(BioMapping):
     """Chromosome object
