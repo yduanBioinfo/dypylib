@@ -631,12 +631,9 @@ class SGENT(dict,dyGENT):
     def get_sorted_values(self,key = lambda x: x.start):
         return sorted(self.values(),key = key)
 
-class BioMapping(Mapping, GffutilsGENT):
-    """Mapping object for biology purpose.
-    
+class GffutilsSGENT(Mapping, GffutilsGENT):
+    """Mapping object for biology purpose under Gffutils engine.
     Data are deposited in database.
-    to-do: Make this object a database version of GENT,
-        or make a new GENT class (mGENT)which is child of BioMapping.
 
         get_parents -> get_parents_id like get_children_id
     """
@@ -644,7 +641,7 @@ class BioMapping(Mapping, GffutilsGENT):
         return Mapping.__new__(self)
 
     def __init__(self, *args, engine="gffutils", **kwargs):
-        super(BioMapping, self).__init__(*args,engine=engine, **kwargs)
+        super(GffutilsSGENT, self).__init__(*args,engine=engine, **kwargs)
 
     def __getitem__(self, key):
         if self.engine == 'gffutils':
@@ -763,7 +760,7 @@ class TxDict(SGENT, BaseTranscript):
             res.append(Intron(_start,_end,e_0.strand,e_0.Chr,e_0.gene_id,e_0.tx_id))
         return res
 
-class GffutilsTranscript(BioMapping, BaseTranscript):
+class GffutilsTranscript(GffutilsSGENT, BaseTranscript):
     """Chromosome object
     """
 
@@ -1703,10 +1700,7 @@ class Test(ABC):
         else:
             return PSGame()
 
-
-
-
-class GffutilsGene(BioMapping):
+class GffutilsGene(GffutilsSGENT):
     """Chromosome object
     """
 
@@ -1724,7 +1718,7 @@ class GffutilsGene(BioMapping):
             children.append(rec.id)
         return children
 
-class GffutilsChr(BioMapping):
+class GffutilsChr(GffutilsSGENT):
     """Chromosome object
     """
 
@@ -1744,7 +1738,7 @@ class GffutilsChr(BioMapping):
             keys.append(i['id'])
         return keys
 
-class GffutilsGenome(BioMapping):
+class GffutilsGenome(GffutilsSGENT):
     """Genome object.
     
     The children can be chromosomes, schaffolds, or any other
