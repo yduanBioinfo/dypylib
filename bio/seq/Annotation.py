@@ -443,6 +443,7 @@ class GffutilsCDS(GffutilsGENT, BaseCDS):
 
 class BaseIntron(object):
     """Base class of CDS"""
+    pass
 
 class dyIntron(dyGENT, BaseIntron):
     """
@@ -708,6 +709,7 @@ class GffutilsSGENT(Mapping, GffutilsGENT):
 
 class BaseTranscript(object):
     """Base class of Transcript"""
+    pass
 
 # transcript
 class TxDict(dySGENT, BaseTranscript):
@@ -777,7 +779,11 @@ class GffutilsTranscript(GffutilsSGENT, BaseTranscript):
         else:
             return GffutilsGENT(self.db, name=feature.id, engine='gffutils')
 
-class GeneDict(dySGENT):
+class BaseGene(object):
+    """Base class of Gene"""
+    pass
+
+class GeneDict(dySGENT, BaseGene):
 
     def add_exon(self,exon):
         if exon.tx_id in self.keys():
@@ -828,6 +834,24 @@ class GeneDict(dySGENT):
                 rep_tx = tx
                 max_len = len(tx)
         return rep_tx
+
+class GffutilsGene(GffutilsSGENT, BaseGene):
+    """Chromosome object
+    """
+
+    def _gffutils__getitem__(self, key):
+        if key not in self:
+            info = "{} is not contained in {}, please check it.\
+                    ".format(key, self.name)
+            raise KeyError(info)
+        return Transcript(self.db, name=key, engine='gffutils')
+
+    def _gffutils_get_children_id(self):
+        children = []
+        records = self.db.children(self.name, featuretype = 'transcript')
+        for rec in records:
+            children.append(rec.id)
+        return children
 
 class ChrDict(dySGENT):
 
@@ -1700,23 +1724,6 @@ class Test(ABC):
         else:
             return PSGame()
 
-class GffutilsGene(GffutilsSGENT):
-    """Chromosome object
-    """
-
-    def _gffutils__getitem__(self, key):
-        if key not in self:
-            info = "{} is not contained in {}, please check it.\
-                    ".format(key, self.name)
-            raise KeyError(info)
-        return Transcript(self.db, name=key, engine='gffutils')
-
-    def _gffutils_get_children_id(self):
-        children = []
-        records = self.db.children(self.name, featuretype = 'transcript')
-        for rec in records:
-            children.append(rec.id)
-        return children
 
 class GffutilsChr(GffutilsSGENT):
     """Chromosome object
