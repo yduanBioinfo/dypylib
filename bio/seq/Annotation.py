@@ -853,7 +853,11 @@ class GffutilsGene(GffutilsSGENT, BaseGene):
             children.append(rec.id)
         return children
 
-class ChrDict(dySGENT):
+class BaseChromosome(object):
+    """Base class of BaseChromosome"""
+    pass
+
+class ChrDict(dySGENT, BaseChromosome):
 
     def __init__(self,es=[],perm_op=True,engine="dypylib"):
         # es: elements
@@ -898,6 +902,26 @@ class ChrDict(dySGENT):
 
     def __len__(self):
         return self.get_count()
+
+class GffutilsChr(GffutilsSGENT, BaseChromosome):
+    """Chromosome object
+    """
+
+    def _gffutils__getitem__(self, key):
+        if key not in self:
+            info = "{} is not contained in {}, please check it.\
+                    ".format(key, self.name)
+            raise KeyError(info)
+        return Gene(self.db, name=key, engine='gffutils')
+
+    def _gffutils_get_children_id(self):
+        keys = []
+        order = "select id from features where seqid = '%s' AND featuretype = 'gene'" \
+                % self.name
+        c = self.db.execute(order)
+        for i in set(c.fetchall()):
+            keys.append(i['id'])
+        return keys
 
 class GenomeDict(dySGENT):
     """to-do: Remove this object"""
@@ -1725,25 +1749,6 @@ class Test(ABC):
             return PSGame()
 
 
-class GffutilsChr(GffutilsSGENT):
-    """Chromosome object
-    """
-
-    def _gffutils__getitem__(self, key):
-        if key not in self:
-            info = "{} is not contained in {}, please check it.\
-                    ".format(key, self.name)
-            raise KeyError(info)
-        return Gene(self.db, name=key, engine='gffutils')
-
-    def _gffutils_get_children_id(self):
-        keys = []
-        order = "select id from features where seqid = '%s' AND featuretype = 'gene'" \
-                % self.name
-        c = self.db.execute(order)
-        for i in set(c.fetchall()):
-            keys.append(i['id'])
-        return keys
 
 class GffutilsGenome(GffutilsSGENT):
     """Genome object.
