@@ -441,10 +441,11 @@ class dyCDS(dyGENT, BaseCDS):
 class GffutilsCDS(GffutilsGENT, BaseCDS):
     pass
 
-class INTRON(dyGENT):
-    """To-do: Rename to dyINTRON,
-              Add gffutilsINTRON,
-              Add a common parent INTRON
+class BaseIntron(object):
+    """Base class of CDS"""
+
+class dyIntron(dyGENT, BaseIntron):
+    """
     """
 
     def __init__(self,start,end,strand,Chr,gene_id = None,tx_id = None):
@@ -452,7 +453,7 @@ class INTRON(dyGENT):
         self.chrom = Chr
         self.gene_id = gene_id
         self.tx_id = tx_id
-        super(INTRON,self).__init__(start,end,strand)
+        super(dyIntron,self).__init__(start,end,strand)
 
     def __hash__(self):
         return hash((self.start, self.end, self.strand, self.Chr, \
@@ -464,6 +465,9 @@ class INTRON(dyGENT):
                    (self.start == other.start) and (self.end == other.end)
         except:
             return False
+
+class GffutilsIntron(GffutilsGENT, BaseIntron):
+    pass
 
 class SGENT(dict,dyGENT):
     """Segments genome element
@@ -675,7 +679,7 @@ class TxDict(SGENT):
             _end = e_1.start - 1
             if _start > _end:
                 raise ValueError("The end of the intron must be bigger than the start")
-            res.append(INTRON(_start,_end,e_0.strand,e_0.Chr,e_0.gene_id,e_0.tx_id))
+            res.append(Intron(_start,_end,e_0.strand,e_0.Chr,e_0.gene_id,e_0.tx_id))
         return res
 
 class GeneDict(SGENT):
@@ -1822,6 +1826,9 @@ class EXON(GenomeFeature):
 
 class CDS(GenomeFeature):
     engines = {'dypylib': dyCDS, 'gffutils': GffutilsCDS}
+
+class Intron(GenomeFeature):
+    engines = {'dypylib': dyIntron, 'gffutils': GffutilsIntron}
     
 def create_genome_using_gffutils(infile, dbfn = ':memory:'):
     """Create Genome object using gffutils
