@@ -475,6 +475,8 @@ class dySGENT(dict,dyGENT):
     like: transcripts, genes.
     When parse gff record, basic information like start, end, strand will be load first.
     While comes across gtf file, basic infromation was acquired through add_exon methods.
+
+    to-do: solve the problem: make clear the relationship between name and ID.
     """
     def __new__(self,*args,**kwargs):
         return dict.__new__(self)
@@ -631,6 +633,9 @@ class dySGENT(dict,dyGENT):
 
     def get_sorted_values(self,key = lambda x: x.start):
         return sorted(self.values(),key = key)
+
+    def get_children_id(self):
+        return self.keys()
 
 class GffutilsSGENT(Mapping, GffutilsGENT):
     """Mapping object for biology purpose under Gffutils engine.

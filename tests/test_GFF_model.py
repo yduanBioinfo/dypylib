@@ -26,13 +26,22 @@ def test_on_genome_object():
     for k,v in mygenome.items():
         assert k in target_keys
 
-def test_on_chr_object():
+def _test_on_chr_object_common():
     assert isinstance(mychr, Chr)
-    assert mychr.name == 'CI01000023'
     mychildren = mychr.get_children_id()
     # Test first and last gene_id is in chromosome
     assert 'CIWT.8168' in mychildren
     assert 'CIWT.8138' in mychildren
+    assert 'CIWT.8168' in mychr
+    assert 'CIWT.8138' in mychr
+
+def test_on_chr_object():
+    assert mychr.name == 'CI01000023'
+    _test_on_chr_object_common()
+
+def _test_on_chr_object_dy():
+    assert mychr.ID == 'CI01000023'
+    _test_on_chr_object_common()
 
 def test_on_Gene_object():
     assert isinstance(mygene, Gene)
@@ -74,6 +83,7 @@ def test_GtfDict():
     mychr = mygenome['CI01000023']
     mygene = mychr['CIWT.8140']
     test_on_genome_object()
+    _test_on_chr_object_dy()
     #test_on_chr_object()
     #test_on_Gene_object()
 
