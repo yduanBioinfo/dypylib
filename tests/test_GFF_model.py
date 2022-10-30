@@ -84,8 +84,7 @@ def test_GtfDict():
     mygene = mychr['CIWT.8140']
     test_on_genome_object()
     _test_on_chr_object_dy()
-    #test_on_chr_object()
-    #test_on_Gene_object()
+    test_on_Gene_object()
 
 def test_metaClass():
     """Test for the examples using metaclass.

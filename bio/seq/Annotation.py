@@ -532,7 +532,8 @@ class dySGENT(dict,dyGENT):
         self.strand = rec.strand
         # maybe only gc gff
         self.ID = rec.attr.get("ID")
-        self.name = rec.attr.get("Name")
+        # Replace name with symbol_name
+        self.symbol_name = rec.attr.get("Name")
         self._count = 0
         self.perm_op = perm_op
 
@@ -729,6 +730,7 @@ class TxDict(dySGENT, BaseTranscript):
     def add_e(self,exon):
         assert isinstance(exon,Exon)
         self.ID = exon.tx_id
+        self.name  = exon.tx_id
         self.Chr = exon.Chr
         self.gene_id = exon.gene_id
         super(TxDict,self).add_e(exon)
@@ -804,6 +806,7 @@ class GeneDict(dySGENT, BaseGene):
     def add_e(self,tx):
         assert isinstance(tx,Transcript)
         self.ID = tx.gene_id
+        self.name  = tx.gene_id
         self.Chr = tx.Chr
         super(GeneDict,self).add_e(tx)
 
@@ -898,6 +901,7 @@ class ChrDict(dySGENT, BaseChromosome):
     def add_e(self,gene):
         assert isinstance(gene,Gene)
         self.ID = gene.Chr
+        self.name  = gene.Chr
         #super(ChrDict,self).add_e(gene)
         self.add_data(gene)
         self.add_len(gene)
