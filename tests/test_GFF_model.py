@@ -40,6 +40,7 @@ def test_on_chr_object():
     _test_on_chr_object_common()
 
 def _test_on_chr_object_dy():
+    assert mychr.name == 'CI01000023'
     assert mychr.ID == 'CI01000023'
     _test_on_chr_object_common()
 
@@ -95,4 +96,3 @@ def test_metaClass():
     assert not isinstance(Last_of_us, Test)
     with pytest.raises(TypeError):
         l = Last_of_us()
-

@@ -316,7 +316,20 @@ class GENT(object):
     def __len__(self):
         return abs(self.end - self.start) + 1
 
-# Genome element
+    def _guess_strand(self):
+        """ Guess the strand information based on the relationship
+            between the start and the end position.
+        """
+        if self.start > self.end:
+            if self.strand == "+":
+                raise ValueError("Stand is not suit for coordinates.\n")
+            self.strand = "-"
+
+    def _adj_pos(self):
+        """ Make sure the end position is bigger than the start."""
+        if self.start > self.end:
+            self.start, self.end = self.end, self.start
+
 class dyGENT(GENT):
     """ Genomic element for dypylib
     """
@@ -331,16 +344,6 @@ class dyGENT(GENT):
         self._adj_pos()
         self.attr=attr
 
-    def _guess_strand(self):
-        if self.start > self.end:
-            if self.strand == "+":
-                raise ValueError("Stand is not suit for coordinates.\n")
-            self.strand = "-"
-
-    def _adj_pos(self):
-        if self.start > self.end:
-            self.start, self.end = self.end, self.start
-
 class GffutilsGENT(GENT):
     """ Genomic element for Gffutils
     """
@@ -348,11 +351,9 @@ class GffutilsGENT(GENT):
         """Should make a function to ensure self.db = self.db,
         self.engine = self.engine when create from GffutilsGENT
         """
-        self.engine = default_param(kwargs, 'engine', 'dypylib')
+        self.engine = default_param(kwargs, 'engine', 'gffutils')
         if self.engine == 'gffutils':
             self._gffutils__init__(*args, **kwargs)
-        elif self.engine == 'dypylib':
-            self._dy__init__(*args, **kwargs)
 
     def __getattr__(self, attr):
         # Try to return attributs definded in database.
@@ -367,20 +368,6 @@ class GffutilsGENT(GENT):
     def _gffutils__getattr__(self, attr):
         # Try to return attributs definded in database.
         return getattr(self.db[self.name], attr)
-
-    def _guess_strand(self):
-        """
-        """
-        if self.start > self.end:
-            if self.strand == "+":
-                raise ValueError("Stand is not suit for coordinates.\n")
-            self.strand = "-"
-
-    def _adj_pos(self):
-        """dy methods, Warning: gffutils might be affected.
-        """
-        if self.start > self.end:
-            self.start, self.end = self.end, self.start
 
 class BaseExon(object):
     """Base class of Exon"""
