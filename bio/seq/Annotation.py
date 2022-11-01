@@ -388,7 +388,9 @@ class dyExon(dyGENT, BaseExon):
             self.rec = None
 
     def init(self,start,end,strand,Chr,gene_id,tx_id):
+        # Chr should be replaced with chrom
         self.Chr = Chr
+        self.chrom = Chr
         self.gene_id = gene_id
         self.tx_id = tx_id
         super(dyExon,self).__init__(start,end,strand)
@@ -417,6 +419,7 @@ class dyExon(dyGENT, BaseExon):
         return self.as_str()
 
 class GffutilsExon(GffutilsGENT, BaseExon):
+    """To-do: Add tx_id, gene_id, Chr"""
     pass
 
 class BaseCDS(object):

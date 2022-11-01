@@ -7,13 +7,14 @@ from bio.seq.Annotation import Genome, Chr, Gene, Transcript
 from bio.seq.Annotation import GtfDict
 
 test_gtf = "tests/data/test.gtf"
-global mygenome, mychr, mygene
+global mygenome, mychr, mygene, mytx
 
 def test_load_GFF():
-    global mygenome, mychr, mygene
+    global mygenome, mychr, mygene, mytx
     mygenome = create_genome_using_gffutils(test_gtf)
     mychr = mygenome['CI01000023']
     mygene = mychr['CIWT.8140']
+    mytx = mygene['CIWT.8140.3']
 
 def test_on_genome_object():
     target_keys = ['CI01000023', 'CI01000025']
@@ -65,6 +66,14 @@ def test_on_Tx_object():
         for i in tx.values():
             assert i.featuretype in ['exon','cds']
 
+def test_on_Exon_object():
+    """To-do: add attribut, parents/gene_id/tx_id/transcript_id"""
+    exon = list(mytx.values())[0]
+    assert exon.start == 258386
+    assert exon.end == 259638
+    assert exon.strand == "+"
+    assert exon.chrom == "CI01000023"
+
 def test_search_method_of_Genome():
     assert isinstance(mygenome.search('CI01000023'),Chr)
     assert isinstance(mygenome.search('CIWT.8168'),Gene)
@@ -79,13 +88,15 @@ def test_search_method_of_Genome():
     print(GffutilsGenome(mygenome.db, engine="gffutils"))
 
 def test_GtfDict():
-    global mygenome, mychr, mygene
+    global mygenome, mychr, mygene, mytx
     mygenome = Genome(test_gtf, engine="dypylib")
     mychr = mygenome['CI01000023']
     mygene = mychr['CIWT.8140']
+    mytx = mygene['CIWT.8140.3']
     test_on_genome_object()
     _test_on_chr_object_dy()
     test_on_Gene_object()
+    test_on_Exon_object()
 
 def test_metaClass():
     """Test for the examples using metaclass.
