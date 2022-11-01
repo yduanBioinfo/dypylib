@@ -374,7 +374,7 @@ class BaseExon(object):
 
 class dyExon(dyGENT, BaseExon):
 
-    def _dy__init__(self,*args,**kwargs):
+    def __init__(self,*args,**kwargs):
         """ Bugs:
             When the attibution has been altered, the correponding value in self.rec keeps original.
             Need a update_rec function to solve this problem.
@@ -436,7 +436,7 @@ class dyIntron(dyGENT, BaseIntron):
     """
     """
 
-    def _dy__init__(self,start,end,strand,Chr,gene_id = None,tx_id = None):
+    def __init__(self,start,end,strand,Chr,gene_id = None,tx_id = None):
         self.Chr = Chr
         self.chrom = Chr
         self.gene_id = gene_id
@@ -468,7 +468,7 @@ class dySGENT(dict,dyGENT):
     def __new__(self,*args,**kwargs):
         return dict.__new__(self)
 
-    def _dy__init__(self,es=[],perm_op=True,static=False,start=float("inf"),end=-float("inf"),strand=".",rec=None):
+    def __init__(self,es=[],perm_op=True,static=False,start=float("inf"),end=-float("inf"),strand=".",rec=None,engine="dypylib"):
         # es: elements
         # perm_op: permit elements overlap
         # static: when static is True, start, end, strand, length option should not be update by add_exon.
@@ -707,7 +707,7 @@ class BaseTranscript(object):
 # transcript
 class TxDict(dySGENT, BaseTranscript):
 
-    def _dy__init__(self,*args,**kwargs):
+    def __init__(self,*args,engine="dypylib",**kwargs):
         kwargs["perm_op"] = False
         super(TxDict,self).__init__(*args,**kwargs)
 
@@ -854,7 +854,7 @@ class BaseChromosome(object):
 
 class ChrDict(dySGENT, BaseChromosome):
 
-    def _dy__init__(self,es=[],perm_op=True):
+    def __init__(self,es=[],perm_op=True,engine="dypylib"):
         # es: elements
         # perm_op: permit elements overlap
         self.start = float("inf")
@@ -1807,12 +1807,6 @@ class GenomeFeature(ABC):
     def __new__(cls, *args, **kwargs):
         engine = default_param(kwargs, 'engine', 'dypylib')
         if engine in cls.engines:
-            print("cls:")
-            print(cls)
-            print("args:")
-            print(args)
-            print("kwargs:")
-            print(kwargs)
             myclass = cls.engines[engine](*args, **kwargs)
             myclass.init_from_factory = True
             cls.register(cls.engines[engine])
