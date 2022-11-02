@@ -72,6 +72,8 @@ def test_on_Exon_object():
     assert exon.end == 259638
     assert exon.strand == "+"
     assert exon.chrom == "CI01000023"
+    for i in exon.parents:
+        print(i)
 
 def _test_on_Exon_object_dy():
     """To-do: add attribut, parents/gene_id/tx_id/transcript_id"""

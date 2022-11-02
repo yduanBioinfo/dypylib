@@ -365,9 +365,36 @@ class GffutilsGENT(GENT):
         self.db = db
         self.name = name
 
+    #def _gffutils__getattr__(self, attr):
+    #    # Try to return attributs definded in database.
+    #    return getattr(self.db[self.name], attr)
     def _gffutils__getattr__(self, attr):
-        # Try to return attributs definded in database.
-        return getattr(self.db[self.name], attr)
+        """Don't init children and parents in __int__,
+        rather find it from datbase when is needed.
+
+        This option can avoid loading every relation in
+            python once construct an object.
+
+        To-do: Whether the _gffutils__getattr__ in GffutilsSGENT 
+               can be replaced by the methods in GffutilsGENT.
+        """
+        if attr == 'children':
+            self.children = self.get_children()
+            return self.children
+        elif attr == 'parents':
+            self.children = self.get_parents()
+            return self.children
+        elif attr == 'children_id':
+            self.children_id = self.get_children_id()
+            return self.children_id
+        else:
+            return getattr(self.db[self.name], attr)
+
+    def get_parents(self):
+        return self._gffutils_get_parents()
+
+    def _gffutils_get_parents(self):
+        return self.db.parents(self.name)
 
 class BaseExon(object):
     """Base class of Exon"""
@@ -395,6 +422,7 @@ class dyExon(dyGENT, BaseExon):
         self.gene_id = gene_id
         self.transcript_id = tx_id
         self.tx_id = tx_id
+        self.parents = [self.transcript_id, self.gene_id]
         super(dyExon,self).__init__(start,end,strand)
 
     def edit_gene_id(self,val):
@@ -692,11 +720,12 @@ class GffutilsSGENT(Mapping, GffutilsGENT):
     def _gffutils_get_children(self):
         return self.db.children(self.name)
 
-    def get_parents(self):
-        return self._gffutils_get_parents()
+    # To-delete
+    #def get_parents(self):
+    #    return self._gffutils_get_parents()
 
-    def _gffutils_get_parents(self):
-        return self.db.parents(self.name)
+    #def _gffutils_get_parents(self):
+    #    return self.db.parents(self.name)
 
     def _gffutils__getitem__(self, key):
         if key not in self:
