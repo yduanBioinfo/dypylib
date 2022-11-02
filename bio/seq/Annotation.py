@@ -389,9 +389,11 @@ class dyExon(dyGENT, BaseExon):
 
     def init(self,start,end,strand,Chr,gene_id,tx_id):
         # Chr should be replaced with chrom
+        # tx_id should be replaced with transcript_id
         self.Chr = Chr
         self.chrom = Chr
         self.gene_id = gene_id
+        self.transcript_id = tx_id
         self.tx_id = tx_id
         super(dyExon,self).__init__(start,end,strand)
 

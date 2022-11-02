@@ -67,12 +67,19 @@ def test_on_Tx_object():
             assert i.featuretype in ['exon','cds']
 
 def test_on_Exon_object():
-    """To-do: add attribut, parents/gene_id/tx_id/transcript_id"""
     exon = list(mytx.values())[0]
     assert exon.start == 258386
     assert exon.end == 259638
     assert exon.strand == "+"
     assert exon.chrom == "CI01000023"
+
+def _test_on_Exon_object_dy():
+    """To-do: add attribut, parents/gene_id/tx_id/transcript_id"""
+    test_on_Exon_object()
+    exon = list(mytx.values())[0]
+    assert exon.gene_id == "CIWT.8140"
+    assert exon.tx_id == "CIWT.8140.3"
+    assert exon.transcript_id == "CIWT.8140.3"
 
 def test_search_method_of_Genome():
     assert isinstance(mygenome.search('CI01000023'),Chr)
@@ -96,7 +103,7 @@ def test_GtfDict():
     test_on_genome_object()
     _test_on_chr_object_dy()
     test_on_Gene_object()
-    test_on_Exon_object()
+    _test_on_Exon_object_dy()
 
 def test_metaClass():
     """Test for the examples using metaclass.
