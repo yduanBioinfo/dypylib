@@ -806,6 +806,10 @@ class GffutilsTranscript(GffutilsSGENT, BaseTranscript):
             return CDS(self.db, name=feature.id, engine='gffutils')
         else:
             return GffutilsGENT(self.db, name=feature.id, engine='gffutils')
+    def get_introns(self):
+        """ Return a list of introns of this transcript.
+        """
+        pass
 
 class BaseGene(object):
     """Base class of Gene"""

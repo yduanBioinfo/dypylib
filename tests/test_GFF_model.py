@@ -83,6 +83,11 @@ def _test_on_Exon_object_dy():
     assert exon.tx_id == "CIWT.8140.3"
     assert exon.transcript_id == "CIWT.8140.3"
 
+def _test_on_Intron_object_dy():
+    introns = mytx.get_introns()
+    for intron in introns:
+        print(intron)
+
 def test_search_method_of_Genome():
     assert isinstance(mygenome.search('CI01000023'),Chr)
     assert isinstance(mygenome.search('CIWT.8168'),Gene)
@@ -96,6 +101,7 @@ def test_search_method_of_Genome():
     from bio.seq.Annotation import GffutilsGenome
     print(GffutilsGenome(mygenome.db, engine="gffutils"))
 
+# Test dyengine
 def test_GtfDict():
     global mygenome, mychr, mygene, mytx
     mygenome = Genome(test_gtf, engine="dypylib")
@@ -106,6 +112,7 @@ def test_GtfDict():
     _test_on_chr_object_dy()
     test_on_Gene_object()
     _test_on_Exon_object_dy()
+    _test_on_Intron_object_dy()
 
 def test_metaClass():
     """Test for the examples using metaclass.
