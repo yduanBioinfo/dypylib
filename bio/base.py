@@ -248,7 +248,7 @@ class DictFile(BaseFile, dict):
 
 class SetFile(BaseFile, set):
     """ Read File into set."""
-    def __init__(self, filename, valuepos=0, delimiter=False,
+    def __init__(self, filename, valuepos=0, delimiter=None,
                        keycast=None, cast=None, has_header=False):
         super(BaseFile, self).__init__()
 
@@ -258,8 +258,8 @@ class SetFile(BaseFile, set):
         ## Should move this two lines to BaseFile?
         self.has_header = has_header
         #self.valuepos = valuepos
-        #if has_header:
-        #    self._read_header(delimiter)
+        if has_header:
+            self._fp.readline()
         for line in self._fp:
             la = line.strip()
             # Escape from empty lines.
