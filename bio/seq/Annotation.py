@@ -343,6 +343,8 @@ class dyGENT(GENT):
         self._guess_strand()
         self._adj_pos()
         self.attr=attr
+        # To be consistent with GffutilsGENT
+        self.attributes = self.attr
 
 class GffutilsGENT(GENT):
     """ Genomic element for Gffutils
@@ -529,6 +531,7 @@ class dySGENT(dict,dyGENT):
         #self.extend(es)
         # Whether to permit elements overlap
         self.perm_op = perm_op
+        self.attributes = {}
 
         # Add single element
         if type(es) != list:
@@ -560,6 +563,35 @@ class dySGENT(dict,dyGENT):
     def add_es(self,es):
         for e in es:
             self.add_e(e)
+        self._update_attributes(es)
+
+    def compare_update_dict(self, dict1, dict2):
+        """Compare and merge two dict.
+            Remove key-value pairs that have different value in two dicts,
+                and out put the "bad" keys.
+        """
+        bad_keys = set()
+        new_dict = {}
+        for key, val in dict1.items():
+            if (key not in dict2) or (val == dict2[key]):
+                new_dict[key] = val
+            else:
+                bad_keys.add(key)
+        for key, val in dict2.items():
+            if key not in dict1:
+                new_dict[key] = val
+        return new_dict, bad_keys
+
+    def _update_attributes(self,es):
+        # bad_keys: The keys that have various values in es attributes.
+        bad_keys = set()
+        for e in es:
+            self.attributes, _bad_keys = \
+                self.compare_update_dict(self.attributes, e.attributes)
+            bad_keys.update(_bad_keys)
+        # delete bad_keys from self.attributs
+        for key in bad_keys:
+            self.attributes.pop(key)
 
     def _update_info(self,e):
         if self.static:
@@ -693,8 +725,15 @@ class GffutilsSGENT(Mapping, GffutilsGENT):
         elif attr == 'children_id':
             self.children_id = self.get_children_id()
             return self.children_id
-        else:
+        elif hasattr(self.db[self.name], attr):
             return getattr(self.db[self.name], attr)
+        else:
+            return self._gffutils_getattr_from_children(attr)
+
+    def _gffutils_getattr_from_children(self, attr):
+        """ To-do: Find attribute from child.
+        """
+        return None
 
     def __iter__(self):
         """Self.keys() are generated here."""
@@ -902,6 +941,7 @@ class ChrDict(dySGENT, BaseChromosome):
         #self.extend(es)
         # Whether to permit elements overlap
         self.perm_op = perm_op
+        self.attributes = {}
 
         # Add single element
         if type(es) != list:
