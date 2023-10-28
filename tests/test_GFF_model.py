@@ -47,9 +47,8 @@ def _test_on_chr_object_dy():
 
 def test_on_Gene_object():
     assert isinstance(mygene, Gene)
-    #print(mygene.__dict__)
-    #print(mygene.attributes)
-    #assert mygene.attributes['gene_id'][0] == 'CIWT.8140'
+    assert mygene.get_attribute('gene_id') == 'CIWT.8140'
+    assert mygene.get_attribute('transcript_id') == None
     for gene in mychr.values():
         for tx in gene.values():
             assert isinstance(tx, Transcript)
@@ -66,6 +65,8 @@ def test_on_Tx_object():
         mygenome['CIWT.8140.uioui']
 
     for tx in mygene.values():
+        assert tx.get_attribute('gene_id') != None
+        assert tx.get_attribute('transcript_id') != None
         for i in tx.values():
             assert i.featuretype in ['exon','cds']
 
@@ -75,9 +76,6 @@ def test_on_Exon_object():
     assert exon.end == 259638
     assert exon.strand == "+"
     assert exon.chrom == "CI01000023"
-    # DY tmp
-    #for i in exon.parents:
-    #    print(i)
 
 def _test_on_Exon_object_dy():
     """To-do: add attribut, parents/gene_id/tx_id/transcript_id"""
@@ -89,9 +87,6 @@ def _test_on_Exon_object_dy():
 
 def _test_on_Intron_object_dy():
     introns = mytx.get_introns()
-    # DY tmp
-    #for intron in introns:
-    #    print(intron)
 
 def test_search_method_of_Genome():
     assert isinstance(mygenome.search('CI01000023'),Chr)
@@ -115,7 +110,6 @@ def test_GtfDict():
     mytx = mygene['CIWT.8140.3']
     test_on_genome_object()
     _test_on_chr_object_dy()
-    ### DY tmp should recover
     test_on_Gene_object()
     _test_on_Exon_object_dy()
     _test_on_Intron_object_dy()

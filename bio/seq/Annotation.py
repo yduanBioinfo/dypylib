@@ -330,6 +330,20 @@ class GENT(object):
         if self.start > self.end:
             self.start, self.end = self.end, self.start
 
+    def get_attribute(self, key):
+        """Get the value of an attribute.
+        Gffutile with save the value of attribute into list, 
+            when the value list only include one value, return
+            the value directly. 
+            Eg, attributes = {gene_id:[XLX_001], child:[A, B, C]}
+            get_attribute('gene_id') --> XLX_001,
+            get_attribute(child) --> [A, B, C]
+        """
+        content = self.attributes.get(key)
+        if isinstance(content, list) and len(content) == 1:
+            content = content[0]
+        return content
+
 class dyGENT(GENT):
     """ Genomic element for dypylib
     """
@@ -410,13 +424,13 @@ class dyExon(dyGENT, BaseExon):
         """
         if isinstance(args[0],Gff_rec):
             o = args[0]
-            self.init(o.start,o.end,o.strand,o.Chr,o.gene_id,o.tx_id)
+            self.init(o.start,o.end,o.strand,o.Chr,o.gene_id,o.tx_id,o.attr)
             self.rec = o
         else:
             self.init(*args,**kwargs)
             self.rec = None
 
-    def init(self,start,end,strand,Chr,gene_id,tx_id):
+    def init(self,start,end,strand,Chr,gene_id,tx_id,attr):
         # Chr should be replaced with chrom
         # tx_id should be replaced with transcript_id
         self.Chr = Chr
@@ -425,7 +439,7 @@ class dyExon(dyGENT, BaseExon):
         self.transcript_id = tx_id
         self.tx_id = tx_id
         self.parents = [self.transcript_id, self.gene_id]
-        super(dyExon,self).__init__(start,end,strand)
+        super(dyExon,self).__init__(start,end,strand,attr)
 
     def edit_gene_id(self,val):
         """ Alter gene_id
@@ -855,6 +869,10 @@ class BaseGene(object):
     pass
 
 class GeneDict(dySGENT, BaseGene):
+
+    def _init_from_GENTs(self, *args, **kwargs):
+        super(GeneDict,self)._init_from_GENTs(*args, **kwargs)
+        self.attributes.pop('transcript_id')
 
     def add_exon(self,exon):
         if exon.tx_id in self.keys():
