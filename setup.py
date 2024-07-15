@@ -33,6 +33,7 @@ setuptools.setup(
     #],
     scripts=[
         'scripts/subset_fasta.py',
+        'scripts/subset_fastq.py',
         'scripts/annot_from_file.py',
         'scripts/filter.py',
         'bio/seq/plotsts.py',
@@ -40,7 +41,6 @@ setuptools.setup(
         'bio/seq/gtf2table.py',
         'bio/seq/countgtf.py',
         'bio/seq/gtf2stat.py',
-        'bio/seq/format/merge_overlap_gene.py',
         'bio/seq/format/merge_overlap_gene.py',
     ],
     python_requires='>=3.6',
